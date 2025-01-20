@@ -18,14 +18,25 @@ class Pharmacy {
   });
 
   factory Pharmacy.fromJson(Map<String, dynamic> json) {
-    return Pharmacy(
-      id: json['id'],
-      name: json['name'],
-      address: json['address'],
-      latitude: json['latitude'],
-      longitude: json['longitude'],
-      phoneNumber: json['phoneNumber'],
-      distance: json['distance'],
-    );
+    print('Converting JSON to Pharmacy: $json');
+    try {
+      return Pharmacy(
+        id: json['id'] as int,
+        name: json['name'] as String,
+        address: json['address'] as String,
+        latitude: (json['latitude'] as num).toDouble(),
+        longitude: (json['longitude'] as num).toDouble(),
+        phoneNumber: json['phoneNumber'] as String,
+        distance: json['distance'] != null ? (json['distance'] as num).toDouble() : null,
+      );
+    } catch (e) {
+      print('Error creating Pharmacy from JSON: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  String toString() {
+    return 'Pharmacy{id: $id, name: $name, address: $address, latitude: $latitude, longitude: $longitude}';
   }
 }

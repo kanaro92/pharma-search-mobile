@@ -7,11 +7,34 @@ import '../models/conversation.dart';
 import '../models/medication_request.dart';
 
 class ApiService {
-  final Dio _dio;
-  final String baseUrl = 'http://192.168.1.27:8080/api';
+  late final Dio _dio;
+  final String? _token;
 
-  ApiService() : _dio = Dio() {
-    _dio.options.baseUrl = baseUrl;
+  ApiService({String? token}) : _token = token {
+    _dio = Dio(BaseOptions(
+      baseUrl: 'http://localhost:8080/api',  // Make sure this matches your Spring Boot server
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    ));
+
+    if (_token != null) {
+      _dio.options.headers['Authorization'] = 'Bearer $_token';
+    }
+
+    // Add interceptor for better error logging
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        print('Making request to: ${options.uri}');
+        return handler.next(options);
+      },
+      onError: (error, handler) {
+        print('Request Error: ${error.message}');
+        print('Request URL: ${error.requestOptions.uri}');
+        return handler.next(error);
+      },
+    ));
   }
 
   Future<String> login(String email, String password) async {
@@ -41,21 +64,27 @@ class ApiService {
     }
   }
 
-  Future<List<Pharmacy>> findNearbyPharmacies(
-      double latitude, double longitude, double radius) async {
+  Future<List<Pharmacy>> findNearbyPharmacies(double latitude, double longitude) async {
     try {
-      print("////////////// Request Headers: ${_dio.options.headers}");
-      final response = await _dio.get('/pharmacies/nearby', queryParameters: {
-        'latitude': latitude,
-        'longitude': longitude,
-        'radius': radius,
-      });
+      print('Fetching nearby pharmacies at ($latitude, $longitude)');
+      final response = await _dio.get(
+        '/pharmacies/nearby',
+        queryParameters: {
+          'latitude': latitude,
+          'longitude': longitude,
+        },
+      );
 
-      return (response.data as List)
-          .map((json) => Pharmacy.fromJson(json))
-          .toList();
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        print('Received ${data.length} pharmacies');
+        return data.map((json) => Pharmacy.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to fetch nearby pharmacies');
+      }
     } catch (e) {
-      throw Exception('Failed to find nearby pharmacies');
+      print('Error fetching nearby pharmacies: $e');
+      rethrow;
     }
   }
 

@@ -39,7 +39,6 @@ class _MedicationDetailScreenState extends State<MedicationDetailScreen> {
       final pharmacies = await _apiService.findNearbyPharmacies(
         position.latitude,
         position.longitude,
-        5.0,
       );
       setState(() {
         _availablePharmacies = pharmacies;
