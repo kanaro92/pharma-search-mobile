@@ -1,170 +1,274 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
-import '../models/medication.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:geolocator/geolocator.dart';
 import '../models/pharmacy.dart';
-import '../models/user.dart';
-import '../models/chat_message.dart';
-import '../models/conversation.dart';
 import '../models/medication_request.dart';
+import '../models/chat_message.dart';
+import '../models/message.dart';
 
 class ApiService {
-  late final Dio _dio;
-  final String? _token;
+  final Dio _dio;
+  final FlutterSecureStorage _storage;
+  bool _isInitialized = false;
 
-  ApiService({String? token}) : _token = token {
-    _dio = Dio(BaseOptions(
-      baseUrl: 'http://localhost:8080/api',  // Make sure this matches your Spring Boot server
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+  ApiService({String baseUrl = 'http://localhost:8080'})
+      : _dio = Dio(BaseOptions(
+          baseUrl: baseUrl,
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 3),
+          validateStatus: (status) => status! < 500,
+        )),
+        _storage = const FlutterSecureStorage() {
+    _dio.interceptors.add(LogInterceptor(
+      request: true,
+      requestHeader: true,
+      requestBody: true,
+      responseHeader: true,
+      responseBody: true,
+      error: true,
     ));
-
-    if (_token != null) {
-      _dio.options.headers['Authorization'] = 'Bearer $_token';
-    }
-
-    // Add interceptor for better error logging
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
-        print('Making request to: ${options.uri}');
-        return handler.next(options);
-      },
-      onError: (error, handler) {
-        print('Request Error: ${error.message}');
-        print('Request URL: ${error.requestOptions.uri}');
-        return handler.next(error);
-      },
-    ));
+    _initializeAuth();
   }
 
-  Future<String> login(String email, String password) async {
-    try {
-      final response = await _dio.post('/auth/login', data: {
-        'email': email,
-        'password': password,
-      });
-      String token = response.data['token'];
-      print("******************************  Token: $token");
-      return token;
-    } catch (e) {
-      throw Exception('Failed to login');
+  Future<void> _initializeAuth() async {
+    if (_isInitialized) return;
+    final token = await _storage.read(key: 'auth_token');
+    if (token != null) {
+      _dio.options.headers['Authorization'] = 'Bearer $token';
     }
+    _isInitialized = true;
   }
 
-  Future<List<Medication>> searchMedications(String query) async {
-    try {
-      final response = await _dio.get('/medications/search', queryParameters: {
-        'query': query,
-      });
-      return (response.data as List)
-          .map((json) => Medication.fromJson(json))
-          .toList();
-    } catch (e) {
-      throw Exception('Failed to search medications');
-    }
+  Future<void> setAuthToken(String token) async {
+    await _storage.write(key: 'auth_token', value: token);
+    _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
-  Future<List<Pharmacy>> findNearbyPharmacies(double latitude, double longitude) async {
+  Future<void> clearAuthToken() async {
+    await _storage.delete(key: 'auth_token');
+    _dio.options.headers.remove('Authorization');
+  }
+
+  Future<bool> login(String email, String password) async {
     try {
-      print('Fetching nearby pharmacies at ($latitude, $longitude)');
-      final response = await _dio.get(
-        '/pharmacies/nearby',
-        queryParameters: {
-          'latitude': latitude,
-          'longitude': longitude,
+      final response = await _dio.post(
+        '/api/auth/login',
+        data: {
+          'email': email,
+          'password': password,
         },
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Raw response data: ${response.data}');
+      if (response.statusCode == 200) {
+        final token = response.data['token'];
+        await _storage.write(key: 'auth_token', value: token);
+        _dio.options.headers['Authorization'] = 'Bearer $token';
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Login error: $e');
+      return false;
+    }
+  }
+
+  Future<void> logout() async {
+    await _storage.delete(key: 'auth_token');
+    _dio.options.headers.remove('Authorization');
+  }
+
+  Future<bool> isAuthenticated() async {
+    final token = await _storage.read(key: 'auth_token');
+    return token != null;
+  }
+
+  Future<bool> register(String name, String email, String password) async {
+    try {
+      final response = await _dio.post(
+        '/api/auth/register',
+        data: {
+          'name': name,
+          'email': email,
+          'password': password,
+          'role': 'PATIENT'
+        },
+      );
+      return response.statusCode == 201;
+    } catch (e) {
+      debugPrint('Registration error: $e');
+      return false;
+    }
+  }
+
+  Future<List<Pharmacy>> getNearbyPharmacies(Position position) async {
+    await _initializeAuth();
+    try {
+      debugPrint('Fetching nearby pharmacies at (${position.latitude}, ${position.longitude})');
+      final response = await _dio.get(
+        '/api/pharmacies/nearby',
+        queryParameters: {
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+          'radius': 5000, // 5km radius
+        },
+      );
+
+      debugPrint('Response status: ${response.statusCode}');
+      debugPrint('Response data: ${response.data}');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data;
-        print('Received ${data.length} pharmacies');
-        final pharmacies = data.map((json) => Pharmacy.fromJson(json)).toList();
-        print('Converted pharmacies: $pharmacies');
-        return pharmacies;
+        final List<dynamic> data = response.data as List<dynamic>;
+        return data.map((json) => Pharmacy.fromJson(json)).toList();
       } else {
         throw Exception('Failed to fetch nearby pharmacies: ${response.statusCode}');
       }
-    } catch (e, stackTrace) {
-      print('Error fetching nearby pharmacies: $e');
-      print('Stack trace: $stackTrace');
+    } on DioException catch (e) {
+      debugPrint('DioError fetching nearby pharmacies:');
+      debugPrint('  Type: ${e.type}');
+      debugPrint('  Message: ${e.message}');
+      debugPrint('  Response: ${e.response?.data}');
+      rethrow;
+    } catch (e) {
+      debugPrint('Error fetching nearby pharmacies: $e');
       rethrow;
     }
   }
 
-  Future<List<ChatMessage>> getMessages(int otherUserId, int? medicationRequestId) async {
+  Future<List<Pharmacy>> searchPharmacies(String query) async {
+    await _initializeAuth();
     try {
-      final queryParams = {
-        'otherUserId': otherUserId,
-        if (medicationRequestId != null) 'medicationRequestId': medicationRequestId,
-      };
+      debugPrint('Searching pharmacies with query: $query');
+      final response = await _dio.get(
+        '/api/pharmacies/search',
+        queryParameters: {'query': query},
+      );
 
-      final response = await _dio.get('/messages', queryParameters: queryParams);
-      return (response.data as List)
-          .map((json) => ChatMessage.fromJson(json))
-          .toList();
+      debugPrint('Response status: ${response.statusCode}');
+      debugPrint('Response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data as List<dynamic>;
+        return data.map((json) => Pharmacy.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to search pharmacies: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      debugPrint('DioError searching pharmacies:');
+      debugPrint('  Type: ${e.type}');
+      debugPrint('  Message: ${e.message}');
+      debugPrint('  Response: ${e.response?.data}');
+      rethrow;
     } catch (e) {
-      throw Exception('Failed to load messages');
+      debugPrint('Error searching pharmacies: $e');
+      rethrow;
     }
   }
 
-  Future<ChatMessage> sendMessage(int receiverId, String content, int? medicationRequestId) async {
+  Future<List<String>> searchMedications(String query) async {
+    await _initializeAuth();
     try {
-      final response = await _dio.post('/messages', data: {
-        'receiverId': receiverId,
-        'content': content,
-        if (medicationRequestId != null) 'medicationRequestId': medicationRequestId,
-      });
-      return ChatMessage.fromJson(response.data);
+      final response = await _dio.get(
+        '/api/medications/search',
+        queryParameters: {'query': query},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => json.toString()).toList();
+      } else if (response.statusCode == 403) {
+        throw Exception('Please login to search medications');
+      } else {
+        throw Exception('Failed to search medications');
+      }
     } catch (e) {
-      throw Exception('Failed to send message');
+      debugPrint('Error searching medications: $e');
+      rethrow;
     }
   }
 
-  Future<void> registerFcmToken(String token) async {
+  Future<MedicationRequest> createMedicationRequest(
+    String medicationName,
+    String? note,
+    Pharmacy pharmacy,
+  ) async {
+    await _initializeAuth();
     try {
-      await _dio.post('/users/fcm-token', data: {
-        'token': token,
-      });
+      final response = await _dio.post(
+        '/api/medication-requests',
+        data: {
+          'medicationName': medicationName,
+          'note': note,
+          'pharmacyId': pharmacy.id,
+        },
+      );
+
+      if (response.statusCode == 201) {
+        return MedicationRequest.fromJson(response.data);
+      } else {
+        throw Exception('Failed to create medication request');
+      }
     } catch (e) {
-      throw Exception('Failed to register FCM token');
+      debugPrint('Error creating medication request: $e');
+      rethrow;
     }
   }
 
-  Future<List<Conversation>> getConversations() async {
+  Future<List<Message>> getRequestMessages(int requestId) async {
+    await _initializeAuth();
     try {
-      final response = await _dio.get('/conversations');
-      return (response.data as List)
-          .map((json) => Conversation.fromJson(json))
-          .toList();
+      final response = await _dio.get('/api/medication-requests/$requestId/messages');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Message.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to fetch request messages');
+      }
     } catch (e) {
-      throw Exception('Failed to load conversations');
+      debugPrint('Error fetching request messages: $e');
+      rethrow;
     }
   }
 
-  Future<List<MedicationRequest>> getMedicationRequests() async {
+  Future<Message> sendMessage(int requestId, String content) async {
+    await _initializeAuth();
     try {
-      final response = await _dio.get('/medication-requests');
-      return (response.data as List)
-          .map((json) => MedicationRequest.fromJson(json))
-          .toList();
+      final response = await _dio.post(
+        '/api/medication-requests/$requestId/messages',
+        data: {'content': content},
+      );
+
+      if (response.statusCode == 201) {
+        return Message.fromJson(response.data);
+      } else {
+        throw Exception('Failed to send message');
+      }
     } catch (e) {
-      throw Exception('Failed to load medication requests');
+      debugPrint('Error sending message: $e');
+      rethrow;
     }
   }
 
-  Future<void> cancelMedicationRequest(int requestId) async {
-    try {
-      await _dio.post('/medication-requests/$requestId/cancel');
-    } catch (e) {
-      throw Exception('Failed to cancel medication request');
+  Future<Position> getCurrentPosition() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception('Location services are disabled');
     }
-  }
 
-  void setAuthToken(String token) {
-    print("+++++  token: $token");
-    _dio.options.headers['Authorization'] = 'Bearer $token';
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw Exception('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception('Location permissions are permanently denied');
+    }
+
+    return await Geolocator.getCurrentPosition();
   }
 }

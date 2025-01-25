@@ -1,45 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../models/user.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  User? _user;
-  String? _token;
   final ApiService _apiService;
-  final SharedPreferences _prefs;
+  final _storage = const FlutterSecureStorage();
+  String? _token;
+  bool _isAuthenticated = false;
 
-  AuthProvider(this._apiService, this._prefs) {
-    _token = _prefs.getString('token');
-    print("+++++ bef provider token: $_token");
-    if (_token != null) {
-
-      print("+++++ in provider token: $_token");
-      _apiService.setAuthToken(_token!);
-    }
+  AuthProvider(this._apiService) {
+    _loadToken();
   }
 
-  User? get user => _user;
-  bool get isAuthenticated => _token != null;
-  ApiService get apiService => _apiService;
+  bool get isAuthenticated => _isAuthenticated;
 
-  Future<void> login(String email, String password) async {
+  Future<void> _loadToken() async {
+    _token = await _storage.read(key: 'token');
+    _isAuthenticated = _token != null;
+    notifyListeners();
+  }
+
+  Future<bool> login(String email, String password) async {
     try {
-      final token = await _apiService.login(email, password);
-      _token = token;
-      print("tokennnnnn : $token");
-      await _prefs.setString('token', token);
-      _apiService.setAuthToken(token);
-      notifyListeners();
+      final success = await _apiService.login(email, password);
+      if (success) {
+        _isAuthenticated = true;
+        notifyListeners();
+      }
+      return success;
     } catch (e) {
-      throw Exception('Login failed');
+      debugPrint('Login error: $e');
+      return false;
     }
   }
 
   Future<void> logout() async {
-    _user = null;
+    await _apiService.logout();
+    await _storage.delete(key: 'token');
     _token = null;
-    await _prefs.remove('token');
+    _isAuthenticated = false;
     notifyListeners();
+  }
+
+  Future<bool> register(String name, String email, String password) async {
+    return await _apiService.register(name, email, password);
   }
 }
