@@ -5,7 +5,7 @@ class Pharmacy {
   final double latitude;
   final double longitude;
   final String phoneNumber;
-  final double? distance;
+  final double? distance;  // Distance in kilometers
 
   Pharmacy({
     required this.id,
@@ -18,8 +18,8 @@ class Pharmacy {
   });
 
   factory Pharmacy.fromJson(Map<String, dynamic> json) {
-    print('Converting JSON to Pharmacy: $json');
     try {
+      print('Converting JSON to Pharmacy: $json'); // Debug print
       return Pharmacy(
         id: json['id'] as int,
         name: json['name'] as String,
@@ -31,8 +31,21 @@ class Pharmacy {
       );
     } catch (e) {
       print('Error creating Pharmacy from JSON: $e');
+      print('JSON data: $json');
       rethrow;
     }
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'address': address,
+      'latitude': latitude,
+      'longitude': longitude,
+      'phoneNumber': phoneNumber,
+      'distance': distance,
+    };
   }
 
   @override

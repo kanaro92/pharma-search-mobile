@@ -75,15 +75,21 @@ class ApiService {
         },
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Raw response data: ${response.data}');
+
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         print('Received ${data.length} pharmacies');
-        return data.map((json) => Pharmacy.fromJson(json)).toList();
+        final pharmacies = data.map((json) => Pharmacy.fromJson(json)).toList();
+        print('Converted pharmacies: $pharmacies');
+        return pharmacies;
       } else {
-        throw Exception('Failed to fetch nearby pharmacies');
+        throw Exception('Failed to fetch nearby pharmacies: ${response.statusCode}');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Error fetching nearby pharmacies: $e');
+      print('Stack trace: $stackTrace');
       rethrow;
     }
   }

@@ -204,18 +204,36 @@ class _HomeScreenState extends State<HomeScreen> {
                                 vertical: 8,
                               ),
                               child: ListTile(
-                                title: Text(pharmacy.name),
+                                title: Text(
+                                  pharmacy.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(pharmacy.address),
+                                    const SizedBox(height: 4),
                                     if (pharmacy.distance != null)
-                                      Text(
-                                        '${pharmacy.distance!.toStringAsFixed(1)} km away',
-                                        style: TextStyle(
-                                          color: Theme.of(context).primaryColor,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.directions_walk,
+                                            size: 16,
+                                            color: Theme.of(context).primaryColor,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            pharmacy.distance! < 1
+                                                ? '${(pharmacy.distance! * 1000).toStringAsFixed(0)} m'
+                                                : '${pharmacy.distance!.toStringAsFixed(1)} km',
+                                            style: TextStyle(
+                                              color: Theme.of(context).primaryColor,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                   ],
                                 ),
