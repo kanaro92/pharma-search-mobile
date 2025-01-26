@@ -10,18 +10,18 @@ import '../models/message.dart';
 import '../models/medication_inquiry.dart';
 
 class ApiService {
-  final Dio _dio;
+  static const String baseUrl = 'http://172.20.10.6:8080/api';
+  final Dio _dio = Dio(BaseOptions(
+    baseUrl: baseUrl,
+    connectTimeout: const Duration(seconds: 5),
+    receiveTimeout: const Duration(seconds: 3),
+    contentType: 'application/json',
+  ));
   final FlutterSecureStorage _storage;
   bool _isInitialized = false;
 
-  ApiService({String baseUrl = 'http://localhost:8080'})
-      : _dio = Dio(BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 3),
-          validateStatus: (status) => status! < 500,
-        )),
-        _storage = const FlutterSecureStorage() {
+  ApiService({String? baseUrl})
+      : _storage = const FlutterSecureStorage() {
     _dio.interceptors.add(LogInterceptor(
       request: true,
       requestHeader: true,
@@ -55,7 +55,7 @@ class ApiService {
   Future<bool> login(String email, String password) async {
     try {
       final response = await _dio.post(
-        '/api/auth/login',
+        '/auth/login',
         data: {
           'email': email,
           'password': password,
@@ -88,7 +88,7 @@ class ApiService {
   Future<bool> register(String name, String email, String password) async {
     try {
       final response = await _dio.post(
-        '/api/auth/register',
+        '/auth/register',
         data: {
           'name': name,
           'email': email,
@@ -107,7 +107,7 @@ class ApiService {
     try {
       debugPrint('Fetching nearby pharmacies at (${position.latitude}, ${position.longitude})');
       final response = await _dio.get(
-        '/api/pharmacies/nearby',
+        '/pharmacies/nearby',
         queryParameters: {
           'latitude': position.latitude,
           'longitude': position.longitude,
@@ -141,7 +141,7 @@ class ApiService {
     try {
       debugPrint('Searching pharmacies with query: $query');
       final response = await _dio.get(
-        '/api/pharmacies/search',
+        '/pharmacies/search',
         queryParameters: {'query': query},
       );
 
@@ -170,7 +170,7 @@ class ApiService {
     await _initializeAuth();
     try {
       final response = await _dio.get(
-        '/api/medications/search',
+        '/medications/search',
         queryParameters: {'query': query},
       );
 
@@ -197,7 +197,7 @@ class ApiService {
     try {
       debugPrint('Creating medication request with pharmacy ID: ${pharmacy.id}');
       final response = await _dio.post(
-        '/api/medication-requests',
+        '/medication-requests',
         data: {
           'medicationName': medicationName,
           'notes': note,
@@ -228,7 +228,7 @@ class ApiService {
   Future<List<Message>> getRequestMessages(int requestId) async {
     await _initializeAuth();
     try {
-      final response = await _dio.get('/api/medication-requests/$requestId/messages');
+      final response = await _dio.get('/medication-requests/$requestId/messages');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
@@ -246,7 +246,7 @@ class ApiService {
     await _initializeAuth();
     try {
       final response = await _dio.post(
-        '/api/medication-requests/$requestId/messages',
+        '/medication-requests/$requestId/messages',
         data: {'content': content},
       );
 
@@ -265,7 +265,7 @@ class ApiService {
     await _initializeAuth();
     try {
       final response = await _dio.post(
-        '/api/medication-inquiries',
+        '/medication-inquiries',
         data: {
           'medicationName': medicationName,
           'patientNote': note,
@@ -286,7 +286,7 @@ class ApiService {
   Future<List<MedicationInquiry>> getMyMedicationInquiries() async {
     await _initializeAuth();
     try {
-      final response = await _dio.get('/api/medication-inquiries/my');
+      final response = await _dio.get('/medication-inquiries/my');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
@@ -303,7 +303,7 @@ class ApiService {
   Future<List<Message>> getMedicationInquiryMessages(int inquiryId) async {
     await _initializeAuth();
     try {
-      final response = await _dio.get('/api/medication-inquiries/$inquiryId/messages');
+      final response = await _dio.get('/medication-inquiries/$inquiryId/messages');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
@@ -321,7 +321,7 @@ class ApiService {
     await _initializeAuth();
     try {
       final response = await _dio.post(
-        '/api/medication-inquiries/$inquiryId/messages',
+        '/medication-inquiries/$inquiryId/messages',
         data: {'content': content},
       );
 
