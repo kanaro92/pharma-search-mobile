@@ -7,6 +7,7 @@ import '../models/pharmacy.dart';
 import '../models/medication_request.dart';
 import '../models/chat_message.dart';
 import '../models/message.dart';
+import '../models/medication_inquiry.dart';
 
 class ApiService {
   final Dio _dio;
@@ -92,7 +93,6 @@ class ApiService {
           'name': name,
           'email': email,
           'password': password,
-          'role': 'PATIENT'
         },
       );
       return response.statusCode == 201;
@@ -237,6 +237,81 @@ class ApiService {
     try {
       final response = await _dio.post(
         '/api/medication-requests/$requestId/messages',
+        data: {'content': content},
+      );
+
+      if (response.statusCode == 201) {
+        return Message.fromJson(response.data);
+      } else {
+        throw Exception('Failed to send message');
+      }
+    } catch (e) {
+      debugPrint('Error sending message: $e');
+      rethrow;
+    }
+  }
+
+  Future<MedicationInquiry> createMedicationInquiry(String medicationName, String note) async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.post(
+        '/api/medication-inquiries',
+        data: {
+          'medicationName': medicationName,
+          'patientNote': note,
+        },
+      );
+
+      if (response.statusCode == 201) {
+        return MedicationInquiry.fromJson(response.data);
+      } else {
+        throw Exception('Failed to create medication inquiry');
+      }
+    } catch (e) {
+      debugPrint('Error creating medication inquiry: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<MedicationInquiry>> getMyMedicationInquiries() async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.get('/api/medication-inquiries/my');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => MedicationInquiry.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to fetch medication inquiries');
+      }
+    } catch (e) {
+      debugPrint('Error fetching medication inquiries: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Message>> getMedicationInquiryMessages(int inquiryId) async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.get('/api/medication-inquiries/$inquiryId/messages');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Message.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to fetch inquiry messages');
+      }
+    } catch (e) {
+      debugPrint('Error fetching inquiry messages: $e');
+      rethrow;
+    }
+  }
+
+  Future<Message> sendInquiryMessage(int inquiryId, String content) async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.post(
+        '/api/medication-inquiries/$inquiryId/messages',
         data: {'content': content},
       );
 
