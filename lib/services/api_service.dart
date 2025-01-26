@@ -195,20 +195,30 @@ class ApiService {
   ) async {
     await _initializeAuth();
     try {
+      debugPrint('Creating medication request with pharmacy ID: ${pharmacy.id}');
       final response = await _dio.post(
         '/api/medication-requests',
         data: {
           'medicationName': medicationName,
-          'note': note,
+          'notes': note,
           'pharmacyId': pharmacy.id,
+          'quantity': 1,
         },
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('Medication request created successfully: ${response.data}');
         return MedicationRequest.fromJson(response.data);
       } else {
+        debugPrint('Failed to create medication request: ${response.statusCode} - ${response.data}');
         throw Exception('Failed to create medication request');
       }
+    } on DioException catch (e) {
+      debugPrint('DioError creating medication request:');
+      debugPrint('  Type: ${e.type}');
+      debugPrint('  Message: ${e.message}');
+      debugPrint('  Response: ${e.response?.data}');
+      rethrow;
     } catch (e) {
       debugPrint('Error creating medication request: $e');
       rethrow;

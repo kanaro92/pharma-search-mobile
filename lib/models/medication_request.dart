@@ -1,82 +1,70 @@
 import 'package:flutter/material.dart';
-import 'medication.dart';
+import 'user.dart';
 import 'pharmacy.dart';
 
 enum RequestStatus {
-  pending,
-  accepted,
-  rejected,
-  completed,
-  cancelled
+  PENDING,
+  ACCEPTED,
+  REJECTED,
+  COMPLETED,
+  CANCELLED
 }
 
 class MedicationRequest {
   final int id;
-  final Medication medication;
-  final Pharmacy pharmacy;
-  final int quantity;
+  final String medicationName;
+  final int? quantity;
   final String? note;
   final RequestStatus status;
+  final User user;
+  final Pharmacy? pharmacy;
   final DateTime createdAt;
   final DateTime? updatedAt;
-  final bool hasUnreadMessages;
 
   MedicationRequest({
     required this.id,
-    required this.medication,
-    required this.pharmacy,
-    required this.quantity,
+    required this.medicationName,
+    this.quantity,
     this.note,
     required this.status,
+    required this.user,
+    this.pharmacy,
     required this.createdAt,
     this.updatedAt,
-    required this.hasUnreadMessages,
   });
 
   factory MedicationRequest.fromJson(Map<String, dynamic> json) {
     return MedicationRequest(
       id: json['id'],
-      medication: Medication.fromJson(json['medication']),
-      pharmacy: Pharmacy.fromJson(json['pharmacy']),
+      medicationName: json['medicationName'],
       quantity: json['quantity'],
       note: json['note'],
       status: RequestStatus.values.firstWhere(
-        (e) => e.toString().split('.').last == json['status'],
+        (e) => e.toString().split('.').last == json['status'].toString().toUpperCase(),
+        orElse: () => RequestStatus.PENDING,
       ),
+      user: User.fromJson(json['user']),
+      pharmacy: json['pharmacy'] != null ? Pharmacy.fromJson(json['pharmacy']) : null,
       createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: json['updatedAt'] != null 
-          ? DateTime.parse(json['updatedAt'])
-          : null,
-      hasUnreadMessages: json['hasUnreadMessages'] ?? false,
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
 
   String get statusText {
-    switch (status) {
-      case RequestStatus.pending:
-        return 'Pending';
-      case RequestStatus.accepted:
-        return 'Accepted';
-      case RequestStatus.rejected:
-        return 'Rejected';
-      case RequestStatus.completed:
-        return 'Completed';
-      case RequestStatus.cancelled:
-        return 'Cancelled';
-    }
+    return status.toString().split('.').last.toLowerCase();
   }
 
   Color get statusColor {
     switch (status) {
-      case RequestStatus.pending:
+      case RequestStatus.PENDING:
         return Colors.orange;
-      case RequestStatus.accepted:
+      case RequestStatus.ACCEPTED:
         return Colors.green;
-      case RequestStatus.rejected:
+      case RequestStatus.REJECTED:
         return Colors.red;
-      case RequestStatus.completed:
+      case RequestStatus.COMPLETED:
         return Colors.blue;
-      case RequestStatus.cancelled:
+      case RequestStatus.CANCELLED:
         return Colors.grey;
     }
   }
