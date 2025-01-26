@@ -22,6 +22,7 @@ class MedicationInquiry {
   });
 
   factory MedicationInquiry.fromJson(Map<String, dynamic> json) {
+    final messagesList = json['messages'] as List<dynamic>?;
     return MedicationInquiry(
       id: json['id'] as int,
       medicationName: json['medicationName'] as String,
@@ -29,9 +30,7 @@ class MedicationInquiry {
       status: json['status'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
       user: User.fromJson(json['user'] as Map<String, dynamic>),
-      messages: (json['messages'] as List<dynamic>)
-          .map((message) => Message.fromJson(message as Map<String, dynamic>))
-          .toList(),
+      messages: messagesList?.map((message) => Message.fromJson(message as Map<String, dynamic>)).toList() ?? [],
     );
   }
 

@@ -82,6 +82,7 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
         _inquiries.insert(0, inquiry);
         _searchController.clear();
         _noteController.clear();
+        _isLoading = false;
       });
 
       if (!mounted) return;
@@ -92,17 +93,17 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
         ),
       );
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error creating inquiry: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
       setState(() {
         _isLoading = false;
       });
+      
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

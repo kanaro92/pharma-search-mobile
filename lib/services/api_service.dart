@@ -262,7 +262,7 @@ class ApiService {
         },
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return MedicationInquiry.fromJson(response.data);
       } else {
         throw Exception('Failed to create medication inquiry');
