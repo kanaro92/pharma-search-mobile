@@ -1,27 +1,36 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/pharmacy.dart';
-import '../models/medication_request.dart';
-import '../models/chat_message.dart';
 import '../models/message.dart';
+import '../models/medication_request.dart';
 import '../models/medication_inquiry.dart';
+import '../models/chat_message.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://172.20.10.6:8080/api';
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 3),
-    contentType: 'application/json',
-  ));
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:8080/api';
+    }
+    // Use IP address for mobile devices
+    return 'http://192.168.1.27:8080/api';
+  }
+
+  final Dio _dio;
   final FlutterSecureStorage _storage;
   bool _isInitialized = false;
 
-  ApiService({String? baseUrl})
-      : _storage = const FlutterSecureStorage() {
+  ApiService()
+      : _storage = const FlutterSecureStorage(),
+        _dio = Dio(BaseOptions(
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 3),
+          contentType: 'application/json',
+        )) {
+    _dio.options.baseUrl = baseUrl;
     _dio.interceptors.add(LogInterceptor(
       request: true,
       requestHeader: true,
@@ -70,7 +79,7 @@ class ApiService {
       }
       return false;
     } catch (e) {
-      debugPrint('Login error: $e');
+      print('Login error: $e');
       return false;
     }
   }
@@ -97,7 +106,7 @@ class ApiService {
       );
       return response.statusCode == 201;
     } catch (e) {
-      debugPrint('Registration error: $e');
+      print('Registration error: $e');
       return false;
     }
   }
@@ -105,7 +114,7 @@ class ApiService {
   Future<List<Pharmacy>> getNearbyPharmacies(Position position) async {
     await _initializeAuth();
     try {
-      debugPrint('Fetching nearby pharmacies at (${position.latitude}, ${position.longitude})');
+      print('Fetching nearby pharmacies at (${position.latitude}, ${position.longitude})');
       final response = await _dio.get(
         '/pharmacies/nearby',
         queryParameters: {
@@ -115,9 +124,6 @@ class ApiService {
         },
       );
 
-      debugPrint('Response status: ${response.statusCode}');
-      debugPrint('Response data: ${response.data}');
-
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data as List<dynamic>;
         return data.map((json) => Pharmacy.fromJson(json)).toList();
@@ -125,13 +131,13 @@ class ApiService {
         throw Exception('Failed to fetch nearby pharmacies: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      debugPrint('DioError fetching nearby pharmacies:');
-      debugPrint('  Type: ${e.type}');
-      debugPrint('  Message: ${e.message}');
-      debugPrint('  Response: ${e.response?.data}');
+      print('DioError fetching nearby pharmacies:');
+      print('  Type: ${e.type}');
+      print('  Message: ${e.message}');
+      print('  Response: ${e.response?.data}');
       rethrow;
     } catch (e) {
-      debugPrint('Error fetching nearby pharmacies: $e');
+      print('Error fetching nearby pharmacies: $e');
       rethrow;
     }
   }
@@ -139,14 +145,14 @@ class ApiService {
   Future<List<Pharmacy>> searchPharmacies(String query) async {
     await _initializeAuth();
     try {
-      debugPrint('Searching pharmacies with query: $query');
+      print('Searching pharmacies with query: $query');
       final response = await _dio.get(
         '/pharmacies/search',
         queryParameters: {'query': query},
       );
 
-      debugPrint('Response status: ${response.statusCode}');
-      debugPrint('Response data: ${response.data}');
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data as List<dynamic>;
@@ -155,13 +161,13 @@ class ApiService {
         throw Exception('Failed to search pharmacies: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      debugPrint('DioError searching pharmacies:');
-      debugPrint('  Type: ${e.type}');
-      debugPrint('  Message: ${e.message}');
-      debugPrint('  Response: ${e.response?.data}');
+      print('DioError searching pharmacies:');
+      print('  Type: ${e.type}');
+      print('  Message: ${e.message}');
+      print('  Response: ${e.response?.data}');
       rethrow;
     } catch (e) {
-      debugPrint('Error searching pharmacies: $e');
+      print('Error searching pharmacies: $e');
       rethrow;
     }
   }
@@ -183,19 +189,15 @@ class ApiService {
         throw Exception('Failed to search medications');
       }
     } catch (e) {
-      debugPrint('Error searching medications: $e');
+      print('Error searching medications: $e');
       rethrow;
     }
   }
 
-  Future<MedicationRequest> createMedicationRequest(
-    String medicationName,
-    String? note,
-    Pharmacy pharmacy,
-  ) async {
+  Future<bool> createMedicationRequest(String medicationName, String? note, Pharmacy pharmacy) async {
     await _initializeAuth();
     try {
-      debugPrint('Creating medication request with pharmacy ID: ${pharmacy.id}');
+      print('Creating medication request with pharmacy ID: ${pharmacy.id}');
       final response = await _dio.post(
         '/medication-requests',
         data: {
@@ -206,22 +208,10 @@ class ApiService {
         },
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint('Medication request created successfully: ${response.data}');
-        return MedicationRequest.fromJson(response.data);
-      } else {
-        debugPrint('Failed to create medication request: ${response.statusCode} - ${response.data}');
-        throw Exception('Failed to create medication request');
-      }
-    } on DioException catch (e) {
-      debugPrint('DioError creating medication request:');
-      debugPrint('  Type: ${e.type}');
-      debugPrint('  Message: ${e.message}');
-      debugPrint('  Response: ${e.response?.data}');
-      rethrow;
+      return response.statusCode == 201;
     } catch (e) {
-      debugPrint('Error creating medication request: $e');
-      rethrow;
+      print('Error creating medication request: $e');
+      return false;
     }
   }
 
@@ -233,16 +223,15 @@ class ApiService {
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         return data.map((json) => Message.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to fetch request messages');
       }
+      return [];
     } catch (e) {
-      debugPrint('Error fetching request messages: $e');
-      rethrow;
+      print('Error fetching request messages: $e');
+      return [];
     }
   }
 
-  Future<Message> sendMessage(int requestId, String content) async {
+  Future<bool> sendMessage(int requestId, String content) async {
     await _initializeAuth();
     try {
       final response = await _dio.post(
@@ -250,18 +239,14 @@ class ApiService {
         data: {'content': content},
       );
 
-      if (response.statusCode == 201) {
-        return Message.fromJson(response.data);
-      } else {
-        throw Exception('Failed to send message');
-      }
+      return response.statusCode == 201;
     } catch (e) {
-      debugPrint('Error sending message: $e');
-      rethrow;
+      print('Error sending message: $e');
+      return false;
     }
   }
 
-  Future<MedicationInquiry> createMedicationInquiry(String medicationName, String note) async {
+  Future<bool> createMedicationInquiry(String medicationName, String note) async {
     await _initializeAuth();
     try {
       final response = await _dio.post(
@@ -272,14 +257,10 @@ class ApiService {
         },
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return MedicationInquiry.fromJson(response.data);
-      } else {
-        throw Exception('Failed to create medication inquiry');
-      }
+      return response.statusCode == 201;
     } catch (e) {
-      debugPrint('Error creating medication inquiry: $e');
-      rethrow;
+      print('Error creating medication inquiry: $e');
+      return false;
     }
   }
 
@@ -291,12 +272,11 @@ class ApiService {
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         return data.map((json) => MedicationInquiry.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to fetch medication inquiries');
       }
+      return [];
     } catch (e) {
-      debugPrint('Error fetching medication inquiries: $e');
-      rethrow;
+      print('Error fetching medication inquiries: $e');
+      return [];
     }
   }
 
@@ -308,16 +288,15 @@ class ApiService {
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         return data.map((json) => Message.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to fetch inquiry messages');
       }
+      return [];
     } catch (e) {
-      debugPrint('Error fetching inquiry messages: $e');
-      rethrow;
+      print('Error fetching inquiry messages: $e');
+      return [];
     }
   }
 
-  Future<Message> sendInquiryMessage(int inquiryId, String content) async {
+  Future<bool> sendInquiryMessage(int inquiryId, String content) async {
     await _initializeAuth();
     try {
       final response = await _dio.post(
@@ -325,14 +304,10 @@ class ApiService {
         data: {'content': content},
       );
 
-      if (response.statusCode == 201) {
-        return Message.fromJson(response.data);
-      } else {
-        throw Exception('Failed to send message');
-      }
+      return response.statusCode == 201;
     } catch (e) {
-      debugPrint('Error sending message: $e');
-      rethrow;
+      print('Error sending message: $e');
+      return false;
     }
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/pharmacy.dart';
 import '../services/api_service.dart';
 import '../widgets/pharmacy_list_item.dart';
@@ -37,51 +38,58 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
+      // Check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location services are disabled')),
-        );
-        return;
+        throw Exception('Location services are disabled. Please enable location services in your ${kIsWeb ? 'browser' : 'device'} settings.');
       }
 
+      // Check location permissions
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permissions are denied')),
-          );
-          return;
+          throw Exception('Location permissions are denied. Please allow location access.');
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Location permissions are permanently denied'),
-          ),
-        );
-        return;
+        throw Exception('Location permissions are permanently denied. Please reset permissions in your ${kIsWeb ? 'browser' : 'device'} settings.');
       }
 
-      Position position = await Geolocator.getCurrentPosition();
+      // Get current position with high accuracy
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      );
+
       setState(() {
         _currentPosition = position;
         _currentLocation = LatLng(position.latitude, position.longitude);
       });
 
+      // Update map camera position
       if (_mapController != null && _currentLocation != null) {
-        _mapController!.animateCamera(
-          CameraUpdate.newLatLngZoom(_currentLocation!, 12),
+        await _mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(_currentLocation!, 15),
         );
       }
 
+      // Fetch nearby pharmacies
       await _fetchNearbyPharmacies();
     } catch (e) {
       print('Error getting location: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to get current location')),
+        SnackBar(
+          content: Text('Location error: ${e.toString()}'),
+          duration: const Duration(seconds: 5),
+          action: kIsWeb ? null : SnackBarAction(
+            label: 'Settings',
+            onPressed: () async {
+              await Geolocator.openLocationSettings();
+            },
+          ),
+        ),
       );
     } finally {
       setState(() {
@@ -298,11 +306,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Expanded(
-            child: Row(
+            child: Column(
               children: [
-                // Left side: Pharmacy list
+                // Top half: Pharmacy list
                 Expanded(
-                  flex: 1,
                   child: _pharmacies.isEmpty && !_isLoading
                       ? const Center(
                           child: Text('No pharmacies found nearby'),
@@ -314,30 +321,39 @@ class _HomeScreenState extends State<HomeScreen> {
                             return PharmacyListItem(
                               pharmacy: pharmacy,
                               onRequestMedication: () => _showMedicationRequestDialog(pharmacy),
+                              currentPosition: _currentPosition,
                             );
                           },
                         ),
                 ),
-                // Right side: Map
+                // Bottom half: Map
                 Expanded(
-                  flex: 1,
                   child: Stack(
                     children: [
-                      GoogleMap(
-                        initialCameraPosition: CameraPosition(
-                          target: _currentLocation ?? const LatLng(0, 0),
-                          zoom: 12,
+                      if (_currentLocation != null) // Only show map when we have location
+                        GoogleMap(
+                          initialCameraPosition: CameraPosition(
+                            target: _currentLocation!,
+                            zoom: 15,
+                          ),
+                          markers: _markers,
+                          myLocationEnabled: true,
+                          myLocationButtonEnabled: true,
+                          zoomControlsEnabled: true,
+                          mapToolbarEnabled: true,
+                          onMapCreated: (GoogleMapController controller) {
+                            setState(() {
+                              _mapController = controller;
+                            });
+                            if (_pharmacies.isNotEmpty) {
+                              _updateMarkers();
+                            }
+                          },
+                        )
+                      else
+                        const Center(
+                          child: CircularProgressIndicator(),
                         ),
-                        markers: _markers,
-                        myLocationEnabled: true,
-                        myLocationButtonEnabled: false,
-                        onMapCreated: (controller) {
-                          _mapController = controller;
-                          if (_pharmacies.isNotEmpty) {
-                            _updateMarkers();
-                          }
-                        },
-                      ),
                       if (_isLoading)
                         Container(
                           color: Colors.black.withOpacity(0.3),

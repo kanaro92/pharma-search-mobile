@@ -73,37 +73,39 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
     });
 
     try {
-      final inquiry = await widget.apiService.createMedicationInquiry(
+      final success = await widget.apiService.createMedicationInquiry(
         _searchController.text.trim(),
         _noteController.text.trim(),
       );
 
-      setState(() {
-        _inquiries.insert(0, inquiry);
-        _searchController.clear();
-        _noteController.clear();
-        _isLoading = false;
-      });
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Inquiry sent to pharmacists'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (success) {
+        // Refresh the inquiries list
+        await _loadInquiries();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Inquiry created successfully')),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to create inquiry')),
+          );
+        }
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceAll('Exception: ', '')),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

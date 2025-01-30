@@ -6,6 +6,7 @@ import 'services/api_service.dart';
 import 'providers/auth_provider.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final apiService = ApiService(baseUrl: 'http://localhost:8080');
+    final apiService = ApiService();
 
     return MultiProvider(
       providers: [

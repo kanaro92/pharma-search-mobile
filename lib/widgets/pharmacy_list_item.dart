@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../models/pharmacy.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
 
 class PharmacyListItem extends StatelessWidget {
   final Pharmacy pharmacy;
   final VoidCallback onRequestMedication;
+  final Position? currentPosition;
 
   const PharmacyListItem({
     Key? key,
     required this.pharmacy,
     required this.onRequestMedication,
+    this.currentPosition,
   }) : super(key: key);
 
   @override

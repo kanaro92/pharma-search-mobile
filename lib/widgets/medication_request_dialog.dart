@@ -44,39 +44,32 @@ class _MedicationRequestDialogState extends State<MedicationRequestDialog> {
     });
 
     try {
-      final request = await widget.apiService.createMedicationRequest(
+      final success = await widget.apiService.createMedicationRequest(
         _medicationController.text,
         _noteController.text.isEmpty ? null : _noteController.text,
         widget.pharmacy,
       );
 
-      if (!mounted) return;
-
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Request sent successfully'),
-          backgroundColor: Colors.green,
-          action: SnackBarAction(
-            label: 'View',
-            textColor: Colors.white,
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                '/medication-requests/${request.id}',
-              );
-            },
-          ),
-        ),
-      );
+      if (success) {
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Request sent successfully')),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to send request')),
+          );
+        }
+      }
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to send request: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send request: $e')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
