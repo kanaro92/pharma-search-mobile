@@ -60,6 +60,14 @@ class AppDrawer extends StatelessWidget {
                   },
                 ),
                 ListTile(
+                  leading: const Icon(Icons.local_pharmacy),
+                  title: const Text('Nearby Pharmacies'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushReplacementNamed(context, '/nearby-pharmacies');
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.history),
                   title: const Text('My Inquiries'),
                   onTap: () {
@@ -82,7 +90,7 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Medication Inquiries'),
                   onTap: () {
                     Navigator.pop(context);
-                    // TODO: Navigate to pharmacist inquiries
+                    Navigator.pushReplacementNamed(context, '/pharmacist-inquiries');
                   },
                 ),
               ],

@@ -232,7 +232,7 @@ class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
                         final pharmacy = _pharmacies[index];
                         return PharmacyListItem(
                           pharmacy: pharmacy,
-                          onTap: () => _showRequestDialog(pharmacy),
+                          onRequestMedication: () => _showRequestDialog(pharmacy),
                           currentPosition: _currentPosition,
                         );
                       },

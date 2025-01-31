@@ -4,6 +4,8 @@ import 'screens/login_screen.dart';
 import 'screens/role_based_main_screen.dart';
 import 'screens/my_inquiries_screen.dart';
 import 'screens/medication_search_screen.dart';
+import 'screens/nearby_pharmacies_screen.dart';
+import 'screens/pharmacist_inquiries_screen.dart';
 import 'services/api_service.dart';
 import 'providers/auth_provider.dart';
 
@@ -44,6 +46,8 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(),
           '/my-inquiries': (context) => const MyInquiriesScreen(),
           '/medication-search': (context) => MedicationSearchScreen(apiService: apiService),
+          '/nearby-pharmacies': (context) => NearbyPharmaciesScreen(apiService: apiService),
+          '/pharmacist-inquiries': (context) => PharmacistInquiriesScreen(apiService: apiService),
         },
       ),
     );

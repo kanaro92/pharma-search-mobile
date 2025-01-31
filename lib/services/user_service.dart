@@ -51,6 +51,11 @@ class UserService {
     return user?['name'];
   }
 
+  Future<String?> getCurrentUserEmail() async {
+    final user = await getCurrentUser();
+    return user?['email'];
+  }
+
   Future<int?> getUserId() async {
     final user = await getCurrentUser();
     return user?['id'];

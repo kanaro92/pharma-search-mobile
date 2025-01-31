@@ -70,7 +70,7 @@ class InquiryListItem extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  formatDate(inquiry.createdAt),
+                  DateFormatter.formatDate(inquiry.createdAt),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.grey,
                       ),
