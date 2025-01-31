@@ -37,6 +37,7 @@ class ApiService {
   final Dio _dio;
   final FlutterSecureStorage _storage;
   bool _isInitialized = false;
+  bool _isRefreshing = false;
 
   ApiService()
       : _storage = const FlutterSecureStorage(),
@@ -48,6 +49,14 @@ class ApiService {
         )) {
     print('Initializing ApiService with base URL: ${baseUrl}');
     _dio.options.baseUrl = baseUrl;
+    _setupInterceptors();
+    _initializeAuth();
+  }
+
+  void _setupInterceptors() {
+    _dio.interceptors.clear();
+    
+    // Add logging interceptor
     _dio.interceptors.add(LogInterceptor(
       request: true,
       requestHeader: true,
@@ -59,7 +68,59 @@ class ApiService {
         print('DIO LOG: $object');
       },
     ));
-    _initializeAuth();
+
+    // Add auth interceptor
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          if (!options.path.contains('/auth/')) {
+            final token = await _storage.read(key: 'auth_token');
+            if (token != null) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
+          }
+          return handler.next(options);
+        },
+        onError: (DioException error, handler) async {
+          if (error.response?.statusCode == 401 && !_isRefreshing) {
+            _isRefreshing = true;
+            try {
+              // Try to refresh the token
+              final newToken = await _refreshToken();
+              if (newToken != null) {
+                // Retry the original request with the new token
+                final opts = error.requestOptions;
+                opts.headers['Authorization'] = 'Bearer $newToken';
+                final response = await _dio.fetch(opts);
+                _isRefreshing = false;
+                return handler.resolve(response);
+              }
+            } catch (e) {
+              print('Token refresh failed: $e');
+              // If refresh fails, clear storage and redirect to login
+              await _storage.deleteAll();
+              _isRefreshing = false;
+              // You might want to add a callback here to notify the UI to show login screen
+            }
+          }
+          return handler.next(error);
+        },
+      ),
+    );
+  }
+
+  Future<String?> _refreshToken() async {
+    try {
+      final response = await _dio.post('/auth/refresh');
+      if (response.statusCode == 200) {
+        final token = response.data['token'];
+        await _storage.write(key: 'auth_token', value: token);
+        return token;
+      }
+    } catch (e) {
+      print('Error refreshing token: $e');
+    }
+    return null;
   }
 
   Future<void> _initializeAuth() async {
