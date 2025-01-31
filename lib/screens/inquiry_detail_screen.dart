@@ -4,6 +4,7 @@ import '../models/medication_inquiry.dart';
 import '../models/message.dart';
 import '../services/user_service.dart';
 import '../widgets/role_based_widget.dart';
+import '../utils/date_formatter.dart';
 
 class InquiryDetailScreen extends StatefulWidget {
   final ApiService apiService;
@@ -24,11 +25,13 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   List<Message> _messages = [];
   bool _isLoading = false;
+  String? _currentUserEmail;
 
   @override
   void initState() {
     super.initState();
     _loadMessages();
+    _loadCurrentUser();
   }
 
   @override
@@ -36,6 +39,13 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final email = await UserService().getCurrentUserEmail();
+    setState(() {
+      _currentUserEmail = email;
+    });
   }
 
   Future<void> _loadMessages() async {
@@ -98,190 +108,125 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inquiry Details'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: RoleBasedWidget(
-        pharmacistBuilder: _buildPharmacistView(),
-        userBuilder: _buildUserView(),
-      ),
-    );
-  }
-
-  Widget _buildPharmacistView() {
-    return Column(
-      children: [
-        // Inquiry details section with additional pharmacist actions
-        Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Medication: ${widget.inquiry.medicationName}',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Note: ${widget.inquiry.patientNote}',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Status: ${widget.inquiry.status}',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              // Pharmacist-specific actions
-              Row(
+      body: Column(
+        children: [
+          // Inquiry Details Card
+          Card(
+            margin: const EdgeInsets.all(8),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      // TODO: Implement status update
-                    },
-                    child: const Text('Update Status'),
+                  Text(
+                    'Medication: ${widget.inquiry.medicationName}',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      // TODO: Implement prescription creation
-                    },
-                    child: const Text('Create Prescription'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Note: ${widget.inquiry.patientNote}',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Status: ${widget.inquiry.status}',
+                    style: TextStyle(
+                      color: widget.inquiry.status == 'PENDING'
+                          ? Colors.orange
+                          : Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        const Divider(),
-        _buildMessagesList(),
-        _buildMessageInput(),
-      ],
-    );
-  }
-
-  Widget _buildUserView() {
-    return Column(
-      children: [
-        // Simple inquiry details section for users
-        Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Medication: ${widget.inquiry.medicationName}',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Note: ${widget.inquiry.patientNote}',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Status: ${widget.inquiry.status}',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
-        ),
-        const Divider(),
-        _buildMessagesList(),
-        _buildMessageInput(),
-      ],
-    );
-  }
-
-  Widget _buildMessagesList() {
-    return Expanded(
-      child: _isLoading && _messages.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                final isFromPharmacist = message.getSenderId() != widget.inquiry.userId;
-
-                return Align(
-                  alignment: isFromPharmacist
-                      ? Alignment.centerLeft
-                      : Alignment.centerRight,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isFromPharmacist
-                          ? Colors.grey[300]
-                          : Theme.of(context).primaryColor.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: isFromPharmacist
-                          ? CrossAxisAlignment.start
-                          : CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          isFromPharmacist ? 'Pharmacist' : message.getSenderName(),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(message.content),
-                        const SizedBox(height: 4),
-                        Text(
-                          message.createdAt.toString(),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
             ),
-    );
-  }
-
-  Widget _buildMessageInput() {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
+          // Messages List
           Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: const InputDecoration(
-                hintText: 'Type your message...',
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16),
-              ),
-              onSubmitted: (_) => _sendMessage(),
-            ),
+            child: _isLoading && _messages.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(8),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      final isCurrentUser =
+                          _currentUserEmail != null && message.isCurrentUser(_currentUserEmail!);
+
+                      return Align(
+                        alignment: isCurrentUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isCurrentUser
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.7,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: isCurrentUser
+                                ? CrossAxisAlignment.end
+                                : CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                message.content,
+                                style: TextStyle(
+                                  color: isCurrentUser ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${message.getSenderName()} • ${DateFormatter.formatDateTime(message.createdAt)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isCurrentUser
+                                      ? Colors.white.withOpacity(0.7)
+                                      : Colors.black54,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
-          IconButton(
-            icon: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.send),
-            onPressed: _isLoading ? null : _sendMessage,
+          // Message Input
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: const InputDecoration(
+                      hintText: 'Type your message...',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: null,
+                    textInputAction: TextInputAction.newline,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: _isLoading ? null : _sendMessage,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ],
+            ),
           ),
         ],
       ),
