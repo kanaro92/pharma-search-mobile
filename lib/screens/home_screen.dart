@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/pharmacy.dart';
 import '../services/api_service.dart';
+import '../utils/role_guard.dart';
 import '../widgets/pharmacy_list_item.dart';
 import '../widgets/medication_request_dialog.dart';
 import '../widgets/app_drawer.dart';
@@ -26,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Set<Marker> _markers = {};
   GoogleMapController? _mapController;
   LatLng? _currentLocation;
+  bool _mounted = true;
 
   @override
   void initState() {
@@ -33,7 +35,15 @@ class _HomeScreenState extends State<HomeScreen> {
     _getCurrentLocation();
   }
 
+  @override
+  void dispose() {
+    _mounted = false;
+    super.dispose();
+  }
+
   Future<void> _getCurrentLocation() async {
+    if (!_mounted) return;
+
     setState(() {
       _isLoading = true;
     });
@@ -64,6 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
         timeLimit: const Duration(seconds: 10),
       );
 
+      if (!_mounted) return;
+
       setState(() {
         _currentPosition = position;
         _currentLocation = LatLng(position.latitude, position.longitude);
@@ -79,7 +91,11 @@ class _HomeScreenState extends State<HomeScreen> {
       // Fetch nearby pharmacies
       await _fetchNearbyPharmacies();
     } catch (e) {
-      print('Error getting location: $e');
+      if (!_mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Location error: ${e.toString()}'),
@@ -93,6 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     } finally {
+      if (!_mounted) return;
+
       setState(() {
         _isLoading = false;
       });
@@ -100,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchNearbyPharmacies() async {
-    if (_currentPosition == null) return;
+    if (_currentPosition == null || !_mounted) return;
 
     setState(() {
       _isLoading = true;
@@ -108,16 +126,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final pharmacies = await widget.apiService.getNearbyPharmacies(_currentPosition!);
+      if (!_mounted) return;
+
       setState(() {
         _pharmacies = pharmacies;
         _updateMarkers();
       });
     } catch (e) {
-      print('Error fetching pharmacies: $e');
+      if (!_mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to fetch nearby pharmacies')),
       );
     } finally {
+      if (!_mounted) return;
+
       setState(() {
         _isLoading = false;
       });
@@ -126,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _updateMarkers() {
     Set<Marker> markers = {};
-    
+
     if (_currentLocation != null) {
       markers.add(
         Marker(
@@ -153,6 +179,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
+
+    if (!_mounted) return;
 
     setState(() {
       _markers = markers;
@@ -253,123 +281,135 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Nearby Pharmacies'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.my_location),
-            onPressed: _getCurrentLocation,
-          ),
-        ],
-      ),
-      drawer: const AppDrawer(),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search pharmacies...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    _fetchNearbyPharmacies();
-                  },
-                ),
-              ),
-              onSubmitted: (value) async {
-                if (value.isEmpty) {
-                  await _fetchNearbyPharmacies();
-                } else {
-                  setState(() {
-                    _isLoading = true;
-                  });
-                  try {
-                    final pharmacies = await widget.apiService.searchPharmacies(value);
-                    setState(() {
-                      _pharmacies = pharmacies;
-                      _updateMarkers();
-                    });
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Failed to search pharmacies')),
-                    );
-                  } finally {
-                    setState(() {
-                      _isLoading = false;
-                    });
-                  }
-                }
-              },
+    return RoleGuard(
+      requiredRole: 'USER',
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Nearby Pharmacies'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.my_location),
+              onPressed: _getCurrentLocation,
             ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                // Top half: Pharmacy list
-                Expanded(
-                  child: _pharmacies.isEmpty && !_isLoading
-                      ? const Center(
-                          child: Text('No pharmacies found nearby'),
-                        )
-                      : ListView.builder(
-                          itemCount: _pharmacies.length,
-                          itemBuilder: (context, index) {
-                            final pharmacy = _pharmacies[index];
-                            return PharmacyListItem(
-                              pharmacy: pharmacy,
-                              onRequestMedication: () => _showMedicationRequestDialog(pharmacy),
-                              currentPosition: _currentPosition,
-                            );
-                          },
-                        ),
-                ),
-                // Bottom half: Map
-                Expanded(
-                  child: Stack(
-                    children: [
-                      if (_currentLocation != null) // Only show map when we have location
-                        GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target: _currentLocation!,
-                            zoom: 15,
-                          ),
-                          markers: _markers,
-                          myLocationEnabled: true,
-                          myLocationButtonEnabled: true,
-                          zoomControlsEnabled: true,
-                          mapToolbarEnabled: true,
-                          onMapCreated: (GoogleMapController controller) {
-                            setState(() {
-                              _mapController = controller;
-                            });
-                            if (_pharmacies.isNotEmpty) {
-                              _updateMarkers();
-                            }
-                          },
-                        )
-                      else
-                        const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      if (_isLoading)
-                        Container(
-                          color: Colors.black.withOpacity(0.3),
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                    ],
+          ],
+        ),
+        drawer: const AppDrawer(),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search pharmacies...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                      _fetchNearbyPharmacies();
+                    },
                   ),
                 ),
-              ],
+                onSubmitted: (value) async {
+                  if (value.isEmpty) {
+                    await _fetchNearbyPharmacies();
+                  } else {
+                    setState(() {
+                      _isLoading = true;
+                    });
+                    try {
+                      final pharmacies = await widget.apiService.searchPharmacies(value);
+                      if (!_mounted) return;
+
+                      setState(() {
+                        _pharmacies = pharmacies;
+                        _updateMarkers();
+                      });
+                    } catch (e) {
+                      if (!_mounted) return;
+
+                      setState(() {
+                        _isLoading = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Failed to search pharmacies')),
+                      );
+                    } finally {
+                      if (!_mounted) return;
+
+                      setState(() {
+                        _isLoading = false;
+                      });
+                    }
+                  }
+                },
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: Column(
+                children: [
+                  // Top half: Pharmacy list
+                  Expanded(
+                    child: _pharmacies.isEmpty && !_isLoading
+                        ? const Center(
+                            child: Text('No pharmacies found nearby'),
+                          )
+                        : ListView.builder(
+                            itemCount: _pharmacies.length,
+                            itemBuilder: (context, index) {
+                              final pharmacy = _pharmacies[index];
+                              return PharmacyListItem(
+                                pharmacy: pharmacy,
+                                onRequestMedication: () => _showMedicationRequestDialog(pharmacy),
+                                currentPosition: _currentPosition,
+                              );
+                            },
+                          ),
+                  ),
+                  // Bottom half: Map
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        if (_currentLocation != null) // Only show map when we have location
+                          GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: _currentLocation!,
+                              zoom: 15,
+                            ),
+                            markers: _markers,
+                            myLocationEnabled: true,
+                            myLocationButtonEnabled: true,
+                            zoomControlsEnabled: true,
+                            mapToolbarEnabled: true,
+                            onMapCreated: (GoogleMapController controller) {
+                              setState(() {
+                                _mapController = controller;
+                              });
+                              if (_pharmacies.isNotEmpty) {
+                                _updateMarkers();
+                              }
+                            },
+                          )
+                        else
+                          const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        if (_isLoading)
+                          Container(
+                            color: Colors.black.withOpacity(0.3),
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

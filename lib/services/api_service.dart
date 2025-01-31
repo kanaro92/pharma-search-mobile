@@ -9,6 +9,7 @@ import '../models/message.dart';
 import '../models/medication_request.dart';
 import '../models/medication_inquiry.dart';
 import '../models/chat_message.dart';
+import 'user_service.dart';
 
 class ApiService {
   static String get baseUrl {
@@ -90,10 +91,27 @@ class ApiService {
         },
       );
 
-      if (response.statusCode == 200) {
-        final token = response.data['token'];
-        await _storage.write(key: 'auth_token', value: token);
-        _dio.options.headers['Authorization'] = 'Bearer $token';
+      print('Login response: ${response.data}');  // Debug log
+
+      if (response.statusCode == 200 && response.data != null) {
+        final responseData = response.data as Map<String, dynamic>;
+        final token = responseData['token'] as String?;
+        final userData = responseData['user'] as Map<String, dynamic>?;
+
+        if (token == null) {
+          print('Login error: Token is null');
+          return false;
+        }
+
+        if (userData == null) {
+          print('Login error: User data is null');
+          return false;
+        }
+
+        await setAuthToken(token);
+        await UserService().setCurrentUser(userData);
+        
+        print('Login successful. User role: ${userData['role']}');
         return true;
       }
       return false;
@@ -104,8 +122,8 @@ class ApiService {
   }
 
   Future<void> logout() async {
-    await _storage.delete(key: 'auth_token');
-    _dio.options.headers.remove('Authorization');
+    await clearAuthToken();
+    await UserService().clearCurrentUser();
   }
 
   Future<bool> isAuthenticated() async {
@@ -376,5 +394,44 @@ class ApiService {
     }
 
     return await Geolocator.getCurrentPosition();
+  }
+
+  Future<List<MedicationInquiry>> getPharmacistInquiries() async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.get('/medication-inquiries/pending');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => MedicationInquiry.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load pharmacist inquiries');
+      }
+    } catch (e) {
+      throw Exception('Error getting pharmacist inquiries: $e');
+    }
+  }
+
+  Future<void> respondToInquiry(int inquiryId, String response) async {
+    await _initializeAuth();
+    try {
+      final body = {
+        'content': response,
+      };
+
+      final apiResponse = await _dio.post(
+        '/medication-inquiries/$inquiryId/messages',
+        data: body,
+      );
+
+      if (apiResponse.statusCode != 200) {
+        throw Exception('Failed to send response');
+      }
+
+      // Close the inquiry after sending the response
+      await _dio.post('/medication-inquiries/$inquiryId/close');
+    } catch (e) {
+      throw Exception('Error responding to inquiry: $e');
+    }
   }
 }

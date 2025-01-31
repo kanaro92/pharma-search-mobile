@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../utils/role_guard.dart';
 import '../models/medication_inquiry.dart';
 import './inquiry_detail_screen.dart';
 import '../widgets/app_drawer.dart';
@@ -124,97 +125,100 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Search Medications'),
-      ),
-      drawer: const AppDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Medication Name',
-                hintText: 'Enter medication name',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _noteController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Additional Notes',
-                hintText: 'Enter any specific requirements or notes',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isLoading ? null : _createInquiry,
-                icon: const Icon(Icons.send),
-                label: const Text('Send Inquiry to Pharmacists'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+    return RoleGuard(
+      requiredRole: 'USER',
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Search Medications'),
+        ),
+        drawer: const AppDrawer(),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  labelText: 'Medication Name',
+                  hintText: 'Enter medication name',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'My Inquiries',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 16),
+              TextField(
+                controller: _noteController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Additional Notes',
+                  hintText: 'Enter any specific requirements or notes',
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _inquiries.isEmpty
-                      ? const Center(
-                          child: Text('No inquiries yet'),
-                        )
-                      : ListView.builder(
-                          itemCount: _inquiries.length,
-                          itemBuilder: (context, index) {
-                            final inquiry = _inquiries[index];
-                            return Card(
-                              child: ListTile(
-                                title: Text(inquiry.medicationName),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      inquiry.patientNote,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Status: ${inquiry.status}',
-                                      style: TextStyle(
-                                        color: inquiry.status == 'PENDING'
-                                            ? Colors.orange
-                                            : Colors.green,
-                                        fontWeight: FontWeight.bold,
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _createInquiry,
+                  icon: const Icon(Icons.send),
+                  label: const Text('Send Inquiry to Pharmacists'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'My Inquiries',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _inquiries.isEmpty
+                        ? const Center(
+                            child: Text('No inquiries yet'),
+                          )
+                        : ListView.builder(
+                            itemCount: _inquiries.length,
+                            itemBuilder: (context, index) {
+                              final inquiry = _inquiries[index];
+                              return Card(
+                                child: ListTile(
+                                  title: Text(inquiry.medicationName),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        inquiry.patientNote,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Status: ${inquiry.status}',
+                                        style: TextStyle(
+                                          color: inquiry.status == 'PENDING'
+                                              ? Colors.orange
+                                              : Colors.green,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  onTap: () => _showInquiryDetails(inquiry),
                                 ),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () => _showInquiryDetails(inquiry),
-                              ),
-                            );
-                          },
-                        ),
-            ),
-          ],
+                              );
+                            },
+                          ),
+              ),
+            ],
+          ),
         ),
       ),
     );

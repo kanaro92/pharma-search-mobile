@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import 'main_screen.dart';
+import '../services/api_service.dart';
+import 'role_based_main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -105,6 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final apiService = Provider.of<ApiService>(context, listen: false);
       final success = await authProvider.login(
         _emailController.text.trim(),
         _passwordController.text,
@@ -115,7 +117,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (success) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
+          MaterialPageRoute(
+            builder: (context) => RoleBasedMainScreen(apiService: apiService),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

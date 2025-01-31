@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/login_screen.dart';
-import 'screens/main_screen.dart';
+import 'screens/role_based_main_screen.dart';
+import 'screens/my_inquiries_screen.dart';
+import 'screens/medication_search_screen.dart';
 import 'services/api_service.dart';
 import 'providers/auth_provider.dart';
 
@@ -30,11 +32,19 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
           useMaterial3: true,
         ),
-        home: Consumer<AuthProvider>(
-          builder: (context, auth, _) {
-            return auth.isAuthenticated ? const MainScreen() : const LoginScreen();
-          },
-        ),
+        initialRoute: '/',
+        routes: {
+          '/': (context) => Consumer<AuthProvider>(
+                builder: (context, auth, _) {
+                  return auth.isAuthenticated 
+                      ? RoleBasedMainScreen(apiService: apiService)
+                      : const LoginScreen();
+                },
+              ),
+          '/login': (context) => const LoginScreen(),
+          '/my-inquiries': (context) => const MyInquiriesScreen(),
+          '/medication-search': (context) => MedicationSearchScreen(apiService: apiService),
+        },
       ),
     );
   }
