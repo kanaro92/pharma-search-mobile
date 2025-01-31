@@ -133,7 +133,7 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final message = _messages[index];
-                      final isFromPharmacist = message.senderId != widget.inquiry.user.id;
+                      final isFromPharmacist = message.getSenderId() != widget.inquiry.userId;
 
                       return Align(
                         alignment: isFromPharmacist
@@ -154,7 +154,7 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
                                 : CrossAxisAlignment.end,
                             children: [
                               Text(
-                                isFromPharmacist ? 'Pharmacist' : 'You',
+                                isFromPharmacist ? 'Pharmacist' : message.getSenderName(),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
@@ -164,7 +164,7 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
                               Text(message.content),
                               const SizedBox(height: 4),
                               Text(
-                                message.timestamp.toString(),
+                                message.createdAt.toString(),
                                 style: const TextStyle(
                                   fontSize: 10,
                                   color: Colors.grey,

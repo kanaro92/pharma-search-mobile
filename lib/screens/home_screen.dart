@@ -7,6 +7,7 @@ import '../models/pharmacy.dart';
 import '../services/api_service.dart';
 import '../widgets/pharmacy_list_item.dart';
 import '../widgets/medication_request_dialog.dart';
+import '../widgets/app_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   final ApiService apiService;
@@ -262,6 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      drawer: const AppDrawer(),
       body: Column(
         children: [
           Padding(

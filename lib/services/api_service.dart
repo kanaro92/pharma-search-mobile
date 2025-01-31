@@ -15,8 +15,22 @@ class ApiService {
     if (kIsWeb) {
       return 'http://localhost:8080/api';
     }
-    // Use IP address for mobile devices
-    return 'http://192.168.1.27:8080/api';
+    // For Android emulator, use 10.0.2.2 instead of localhost
+    if (Platform.isAndroid) {
+      final url = 'http://10.0.2.2:8080/api';
+      print('Running on Android, using URL: $url');
+      return url;
+    }
+    // For iOS simulator, use localhost
+    if (Platform.isIOS) {
+      final url = 'http://localhost:8080/api';
+      print('Running on iOS, using URL: $url');
+      return url;
+    }
+    // For physical devices, use your computer's IP address
+    final url = 'http://192.168.1.27:8080/api';
+    print('Running on physical device, using URL: $url');
+    return url;
   }
 
   final Dio _dio;
@@ -26,10 +40,12 @@ class ApiService {
   ApiService()
       : _storage = const FlutterSecureStorage(),
         _dio = Dio(BaseOptions(
-          connectTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 3),
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 30),
           contentType: 'application/json',
         )) {
+    print('Initializing ApiService with base URL: ${baseUrl}');
     _dio.options.baseUrl = baseUrl;
     _dio.interceptors.add(LogInterceptor(
       request: true,
@@ -38,6 +54,9 @@ class ApiService {
       responseHeader: true,
       responseBody: true,
       error: true,
+      logPrint: (object) {
+        print('DIO LOG: $object');
+      },
     ));
     _initializeAuth();
   }
@@ -257,7 +276,15 @@ class ApiService {
         },
       );
 
-      return response.statusCode == 201;
+      print('Create inquiry response: Status ${response.statusCode}, Data: ${response.data}');
+      return response.statusCode == 200 || response.statusCode == 201;
+    } on DioException catch (e) {
+      print('DioError creating medication inquiry:');
+      print('  Type: ${e.type}');
+      print('  Message: ${e.message}');
+      print('  Response status: ${e.response?.statusCode}');
+      print('  Response data: ${e.response?.data}');
+      return false;
     } catch (e) {
       print('Error creating medication inquiry: $e');
       return false;
@@ -271,24 +298,43 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
-        return data.map((json) => MedicationInquiry.fromJson(json)).toList();
+        print('Fetched inquiries data: $data'); // Debug log
+        return data.map((json) {
+          try {
+            return MedicationInquiry.fromJson(json as Map<String, dynamic>);
+          } catch (e) {
+            print('Error parsing inquiry: $e');
+            print('Problematic JSON: $json');
+            rethrow;
+          }
+        }).toList();
       }
       return [];
     } catch (e) {
       print('Error fetching medication inquiries: $e');
-      return [];
+      rethrow;
     }
   }
 
   Future<List<Message>> getMedicationInquiryMessages(int inquiryId) async {
     await _initializeAuth();
     try {
+      print('Fetching messages for inquiry $inquiryId from ${_dio.options.baseUrl}/medication-inquiries/$inquiryId/messages');
       final response = await _dio.get('/medication-inquiries/$inquiryId/messages');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         return data.map((json) => Message.fromJson(json)).toList();
       }
+      print('Unexpected status code: ${response.statusCode}');
+      return [];
+    } on DioException catch (e) {
+      print('DioError fetching inquiry messages:');
+      print('  Type: ${e.type}');
+      print('  Message: ${e.message}');
+      print('  Base URL: ${_dio.options.baseUrl}');
+      print('  Response status: ${e.response?.statusCode}');
+      print('  Response data: ${e.response?.data}');
       return [];
     } catch (e) {
       print('Error fetching inquiry messages: $e');

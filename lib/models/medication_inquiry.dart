@@ -6,10 +6,8 @@ class MedicationInquiry {
   final String patientNote;
   final String status;
   final DateTime createdAt;
-  final User user;
-  final List<Message> messages;
-
-  int get userId => user.id;
+  final Map<String, dynamic>? user;
+  final List<Message>? messages;
 
   MedicationInquiry({
     required this.id,
@@ -17,21 +15,35 @@ class MedicationInquiry {
     required this.patientNote,
     required this.status,
     required this.createdAt,
-    required this.user,
-    required this.messages,
+    this.user,
+    this.messages,
   });
 
+  int? get userId => user?['id'] as int?;
+
   factory MedicationInquiry.fromJson(Map<String, dynamic> json) {
-    final messagesList = json['messages'] as List<dynamic>?;
-    return MedicationInquiry(
-      id: json['id'] as int,
-      medicationName: json['medicationName'] as String,
-      patientNote: json['patientNote'] as String,
-      status: json['status'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      user: User.fromJson(json['user'] as Map<String, dynamic>),
-      messages: messagesList?.map((message) => Message.fromJson(message as Map<String, dynamic>)).toList() ?? [],
-    );
+    try {
+      List<Message>? messagesList;
+      if (json['messages'] != null) {
+        messagesList = (json['messages'] as List<dynamic>)
+            .map((message) => Message.fromJson(message as Map<String, dynamic>))
+            .toList();
+      }
+
+      return MedicationInquiry(
+        id: json['id'] as int,
+        medicationName: json['medicationName'] as String,
+        patientNote: json['patientNote'] as String,
+        status: json['status'] as String,
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        user: json['user'] as Map<String, dynamic>?,
+        messages: messagesList,
+      );
+    } catch (e) {
+      print('Error parsing MedicationInquiry: $e');
+      print('JSON data: $json');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -41,8 +53,8 @@ class MedicationInquiry {
       'patientNote': patientNote,
       'status': status,
       'createdAt': createdAt.toIso8601String(),
-      'user': user.toJson(),
-      'messages': messages.map((message) => message.toJson()).toList(),
+      'user': user,
+      'messages': messages?.map((message) => message.toJson()).toList(),
     };
   }
 }

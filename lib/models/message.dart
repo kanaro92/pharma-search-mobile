@@ -1,43 +1,53 @@
 class Message {
   final int id;
-  final int senderId;
-  final int receiverId;
   final String content;
-  final DateTime timestamp;
-  final bool read;
-  final int? medicationRequestId;
+  final DateTime createdAt;
+  final Map<String, dynamic>? sender;
+  final Map<String, dynamic>? inquiry;
 
   Message({
     required this.id,
-    required this.senderId,
-    required this.receiverId,
     required this.content,
-    required this.timestamp,
-    required this.read,
-    this.medicationRequestId,
+    required this.createdAt,
+    this.sender,
+    this.inquiry,
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
-    return Message(
-      id: json['id'],
-      senderId: json['senderId'],
-      receiverId: json['receiverId'],
-      content: json['content'],
-      timestamp: DateTime.parse(json['timestamp']),
-      read: json['read'],
-      medicationRequestId: json['medicationRequestId'],
-    );
+    try {
+      return Message(
+        id: json['id'] as int,
+        content: json['content'] as String,
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        sender: json['sender'] as Map<String, dynamic>?,
+        inquiry: json['inquiry'] as Map<String, dynamic>?,
+      );
+    } catch (e) {
+      print('Error parsing Message: $e');
+      print('JSON data: $json');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'senderId': senderId,
-      'receiverId': receiverId,
       'content': content,
-      'timestamp': timestamp.toIso8601String(),
-      'read': read,
-      'medicationRequestId': medicationRequestId,
+      'createdAt': createdAt.toIso8601String(),
+      'sender': sender,
+      'inquiry': inquiry,
     };
+  }
+
+  String getSenderName() {
+    return sender?['name'] ?? 'Unknown';
+  }
+
+  bool isCurrentUser(String currentUserEmail) {
+    return sender?['email'] == currentUserEmail;
+  }
+
+  int? getSenderId() {
+    return sender?['id'] as int?;
   }
 }

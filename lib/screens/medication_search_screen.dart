@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/medication_inquiry.dart';
 import './inquiry_detail_screen.dart';
+import '../widgets/app_drawer.dart';
 import 'dart:async';
 
 class MedicationSearchScreen extends StatefulWidget {
@@ -125,8 +126,9 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medication Search'),
+        title: const Text('Search Medications'),
       ),
+      drawer: const AppDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
