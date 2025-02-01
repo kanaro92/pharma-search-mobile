@@ -100,7 +100,7 @@ class AppDrawer extends StatelessWidget {
                 title: const Text('Profile'),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Navigate to profile
+                  Navigator.pushNamed(context, '/profile');
                 },
               ),
               ListTile(

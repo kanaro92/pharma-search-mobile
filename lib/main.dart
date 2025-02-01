@@ -8,6 +8,7 @@ import 'screens/nearby_pharmacies_screen.dart';
 import 'screens/pharmacist_inquiries_screen.dart';
 import 'services/api_service.dart';
 import 'providers/auth_provider.dart';
+import 'screens/profile_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (context) => Consumer<AuthProvider>(
                 builder: (context, auth, _) {
-                  return auth.isAuthenticated 
+                  return auth.isAuthenticated
                       ? RoleBasedMainScreen(apiService: apiService)
                       : const LoginScreen();
                 },
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
           '/medication-search': (context) => MedicationSearchScreen(apiService: apiService),
           '/nearby-pharmacies': (context) => NearbyPharmaciesScreen(apiService: apiService),
           '/pharmacist-inquiries': (context) => PharmacistInquiriesScreen(apiService: apiService),
+          '/profile': (context) => const ProfileScreen(),
         },
       ),
     );
