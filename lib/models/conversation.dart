@@ -1,37 +1,47 @@
 class Conversation {
-  final int id;
-  final int otherUserId;
-  final String otherUserName;
-  final String lastMessage;
-  final DateTime lastMessageTime;
-  final bool hasUnreadMessages;
-  final int unreadCount;
-  final String? otherUserAvatar;
+  final String id;
+  final int user1Id;
+  final int user2Id;
   final int? medicationRequestId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final String lastMessage;
+  final bool hasUnreadMessages;
 
   Conversation({
     required this.id,
-    required this.otherUserId,
-    required this.otherUserName,
-    required this.lastMessage,
-    required this.lastMessageTime,
-    required this.hasUnreadMessages,
-    required this.unreadCount,
-    this.otherUserAvatar,
+    required this.user1Id,
+    required this.user2Id,
     this.medicationRequestId,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.lastMessage,
+    required this.hasUnreadMessages,
   });
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
     return Conversation(
       id: json['id'],
-      otherUserId: json['otherUserId'],
-      otherUserName: json['otherUserName'],
-      lastMessage: json['lastMessage'],
-      lastMessageTime: DateTime.parse(json['lastMessageTime']),
-      hasUnreadMessages: json['hasUnreadMessages'],
-      unreadCount: json['unreadCount'],
-      otherUserAvatar: json['otherUserAvatar'],
+      user1Id: json['user1Id'],
+      user2Id: json['user2Id'],
       medicationRequestId: json['medicationRequestId'],
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
+      lastMessage: json['lastMessage'],
+      hasUnreadMessages: json['hasUnreadMessages'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user1Id': user1Id,
+      'user2Id': user2Id,
+      'medicationRequestId': medicationRequestId,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'lastMessage': lastMessage,
+      'hasUnreadMessages': hasUnreadMessages,
+    };
   }
 }

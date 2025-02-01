@@ -9,6 +9,7 @@ import '../models/message.dart';
 import '../models/medication_request.dart';
 import '../models/medication_inquiry.dart';
 import '../models/chat_message.dart';
+import '../models/conversation.dart';
 import 'user_service.dart';
 
 class ApiService {
@@ -493,6 +494,93 @@ class ApiService {
       await _dio.post('/medication-inquiries/$inquiryId/close');
     } catch (e) {
       throw Exception('Error responding to inquiry: $e');
+    }
+  }
+
+  Future<String> getOrCreateConversation(int otherUserId, int? medicationRequestId) async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.post(
+        '/conversations',
+        data: {
+          'otherUserId': otherUserId,
+          'medicationRequestId': medicationRequestId,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        return data['conversationId'];
+      } else {
+        throw Exception('Failed to get/create conversation');
+      }
+    } catch (e) {
+      throw Exception('Error getting/creating conversation: $e');
+    }
+  }
+
+  Future<List<ChatMessage>> getMessages({
+    required String conversationId,
+    int? medicationRequestId,
+  }) async {
+    await _initializeAuth();
+    try {
+      if (medicationRequestId == null) {
+        throw Exception('Medication request ID is required');
+      }
+
+      final queryParams = {
+        'requestId': medicationRequestId.toString(),
+        'otherUserId': conversationId,
+      };
+
+      final response = await _dio.get(
+        '/messages',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => ChatMessage.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load messages');
+      }
+    } catch (e) {
+      throw Exception('Error loading messages: $e');
+    }
+  }
+
+  Future<ChatMessage> sendChatMessage({
+    required String conversationId,
+    required int receiverId,
+    required String content,
+    int? medicationRequestId,
+  }) async {
+    await _initializeAuth();
+    try {
+      if (medicationRequestId == null) {
+        throw Exception('Medication request ID is required');
+      }
+
+      final response = await _dio.post(
+        '/messages',
+        queryParameters: {
+          'requestId': medicationRequestId.toString(),
+        },
+        data: {
+          'content': content,
+          'receiverId': receiverId.toString(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        return ChatMessage.fromJson(data);
+      } else {
+        throw Exception('Failed to send message');
+      }
+    } catch (e) {
+      throw Exception('Error sending message: $e');
     }
   }
 }

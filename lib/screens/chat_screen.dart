@@ -27,12 +27,13 @@ class _ChatScreenState extends State<ChatScreen> {
   final ApiService _apiService = ApiService();
   late types.User _user;
   bool _isLoading = false;
+  String? _conversationId;
 
   @override
   void initState() {
     super.initState();
     _setupUser();
-    _loadMessages();
+    _initializeConversation();
   }
 
   void _setupUser() {
@@ -44,29 +45,22 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<void> _loadMessages() async {
+  Future<void> _initializeConversation() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final response = await _apiService.getMessages(
+      // Get or create a conversation between the current user and the other user
+      _conversationId = await _apiService.getOrCreateConversation(
         widget.otherUserId,
         widget.medicationRequestId,
       );
-
-      final messages = response.map((msg) {
-        final isCurrentUser = msg.senderId.toString() == _user.id;
-        return msg.toFlutterChatMessage(isCurrentUser);
-      }).toList();
-
-      setState(() {
-        _messages.addAll(messages);
-      });
+      await _loadMessages();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error loading messages: ${e.toString()}'),
+          content: Text('Error initializing conversation: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -77,12 +71,43 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _handleSendPressed(types.PartialText message) async {
+  Future<void> _loadMessages() async {
+    if (_conversationId == null) return;
+
     try {
-      final response = await _apiService.sendMessage(
-        widget.otherUserId,
-        message.text,
-        widget.medicationRequestId,
+      final response = await _apiService.getMessages(
+        conversationId: _conversationId!,
+        medicationRequestId: widget.medicationRequestId,
+      );
+
+      final messages = response.map((msg) {
+        final isCurrentUser = msg.senderId.toString() == _user.id;
+        return msg.toFlutterChatMessage(isCurrentUser);
+      }).toList();
+
+      setState(() {
+        _messages.clear();  // Clear existing messages before adding new ones
+        _messages.addAll(messages);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading messages: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _handleSendPressed(types.PartialText message) async {
+    if (_conversationId == null) return;
+
+    try {
+      final response = await _apiService.sendChatMessage(
+        conversationId: _conversationId!,
+        receiverId: widget.otherUserId,
+        content: message.text,
+        medicationRequestId: widget.medicationRequestId,
       );
 
       final newMessage = response.toFlutterChatMessage(true);
