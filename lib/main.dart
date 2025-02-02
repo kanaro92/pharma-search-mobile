@@ -33,8 +33,37 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'PharmaSearch',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF6B8EB3),
+            brightness: Brightness.light,
+          ),
           useMaterial3: true,
+          cardTheme: CardTheme(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          appBarTheme: const AppBarTheme(
+            centerTitle: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            iconTheme: IconThemeData(color: Color(0xFF6B8EB3)),
+            titleTextStyle: TextStyle(
+              color: Color(0xFF6B8EB3),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ),
         initialRoute: '/',
         routes: {

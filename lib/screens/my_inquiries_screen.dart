@@ -27,96 +27,149 @@ class _MyInquiriesScreenState extends State<MyInquiriesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: const Text('My Inquiries'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Medication Inquiries',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: FutureBuilder<List<MedicationInquiry>>(
-        future: _inquiriesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: SafeArea(
+        child: FutureBuilder<List<MedicationInquiry>>(
+          future: _inquiriesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading inquiries',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _loadInquiries();
-                      });
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final inquiries = snapshot.data ?? [];
-
-          if (inquiries.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.inbox_outlined, size: 60, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No inquiries yet',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Your medication inquiries will appear here',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey,
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Error loading inquiries',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Please check your internet connection and try again.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.error.withOpacity(0.8),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _loadInquiries();
+                          });
+                        },
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Try Again'),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              );
+            }
+
+            final inquiries = snapshot.data ?? [];
+
+            if (inquiries.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.medical_services_outlined,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No Inquiries Yet',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Start by searching for medications and sending inquiries to nearby pharmacies.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/medication-search');
+                        },
+                        icon: const Icon(Icons.search_rounded),
+                        label: const Text('Search Medications'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              color: Theme.of(context).colorScheme.primary,
+              onRefresh: () async {
+                setState(() {
+                  _loadInquiries();
+                });
+              },
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                itemCount: inquiries.length,
+                itemBuilder: (context, index) {
+                  final inquiry = inquiries[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: InquiryListItem(
+                      inquiry: inquiry,
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/inquiry-detail',
+                          arguments: inquiry,
+                        ).then((_) {
+                          setState(() {
+                            _loadInquiries();
+                          });
+                        });
+                      },
+                    ),
+                  );
+                },
               ),
             );
-          }
-
-          return RefreshIndicator(
-            onRefresh: () async {
-              setState(() {
-                _loadInquiries();
-              });
-            },
-            child: ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: inquiries.length,
-              itemBuilder: (context, index) {
-                final inquiry = inquiries[index];
-                return InquiryListItem(
-                  inquiry: inquiry,
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/inquiry-detail',
-                      arguments: inquiry,
-                    ).then((_) {
-                      // Reload inquiries when returning from detail screen
-                      setState(() {
-                        _loadInquiries();
-                      });
-                    });
-                  },
-                );
-              },
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
