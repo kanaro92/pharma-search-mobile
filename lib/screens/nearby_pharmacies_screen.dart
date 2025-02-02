@@ -176,95 +176,226 @@ class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF6B8EB3),
       appBar: AppBar(
-        title: const Text('Nearby Pharmacies'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'Nearby Pharmacies',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search pharmacies...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    _loadNearbyPharmacies();
-                  },
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
-              onChanged: _searchPharmacies,
-            ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
           ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                _error!,
-                style: const TextStyle(color: Colors.red),
-              ),
-            ),
-          if (_isLoading)
-            const Expanded(
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
-            )
-          else
-            Expanded(
-              child: Column(
-                children: [
-                  // Pharmacy List (top half)
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _pharmacies.length,
-                      itemBuilder: (context, index) {
-                        final pharmacy = _pharmacies[index];
-                        return PharmacyListItem(
-                          pharmacy: pharmacy,
-                          onRequestMedication: () => _showRequestDialog(pharmacy),
-                          currentPosition: _currentPosition,
-                        );
-                      },
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search pharmacies...',
+                  hintStyle: TextStyle(
+                    color: Colors.grey[500],
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: const Color(0xFF6B8EB3),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      Icons.clear,
+                      color: Colors.grey[400],
+                    ),
+                    onPressed: () {
+                      _searchController.clear();
+                      _loadNearbyPharmacies();
+                    },
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6B8EB3),
+                      width: 2,
                     ),
                   ),
-                  // Map (bottom half)
-                  Expanded(
-                    child: _currentPosition == null
-                        ? const Center(child: Text('Location not available'))
-                        : GoogleMap(
-                            initialCameraPosition: CameraPosition(
-                              target: LatLng(
-                                _currentPosition!.latitude,
-                                _currentPosition!.longitude,
-                              ),
-                              zoom: 13,
-                            ),
-                            markers: _markers,
-                            myLocationEnabled: true,
-                            myLocationButtonEnabled: true,
-                            onMapCreated: (controller) {
-                              _mapController = controller;
-                            },
-                          ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
                   ),
-                ],
+                ),
+                onChanged: _searchPharmacies,
               ),
             ),
-        ],
+            if (_error != null)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.red[200]!,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red[700],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _error!,
+                        style: TextStyle(
+                          color: Colors.red[700],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (_isLoading)
+              Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: const Color(0xFF6B8EB3),
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: Column(
+                  children: [
+                    // Pharmacy List (top half)
+                    Expanded(
+                      child: _pharmacies.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.local_pharmacy_outlined,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No pharmacies found nearby',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              itemCount: _pharmacies.length,
+                              itemBuilder: (context, index) {
+                                final pharmacy = _pharmacies[index];
+                                return PharmacyListItem(
+                                  pharmacy: pharmacy,
+                                  onRequestMedication: () => _showRequestDialog(pharmacy),
+                                  currentPosition: _currentPosition,
+                                );
+                              },
+                            ),
+                    ),
+                    // Map (bottom half)
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: _currentPosition == null
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.location_off_outlined,
+                                      size: 64,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Location not available',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : GoogleMap(
+                                initialCameraPosition: CameraPosition(
+                                  target: LatLng(
+                                    _currentPosition!.latitude,
+                                    _currentPosition!.longitude,
+                                  ),
+                                  zoom: 13,
+                                ),
+                                markers: _markers,
+                                myLocationEnabled: true,
+                                myLocationButtonEnabled: true,
+                                onMapCreated: (controller) {
+                                  _mapController = controller;
+                                },
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _getCurrentLocation,
+        backgroundColor: const Color(0xFF6B8EB3),
         child: const Icon(Icons.my_location),
       ),
     );
