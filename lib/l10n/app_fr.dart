@@ -17,6 +17,7 @@ class AppLocaleFr {
     'welcome': 'Bienvenue sur PharmaSearch',
     'myInquiries': 'Mes Demandes',
     'searchMedications': 'Rechercher des Médicaments',
+    'searchPharmacies': 'Rechercher des pharmacies...',
     'nearbyPharmacies': 'Pharmacies à Proximité',
     'pharmacistInquiries': 'Demandes des Pharmaciens',
     'pharmacyManagement': 'Gestion de la Pharmacie',

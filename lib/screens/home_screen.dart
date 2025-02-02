@@ -9,6 +9,7 @@ import '../utils/role_guard.dart';
 import '../widgets/pharmacy_list_item.dart';
 import '../widgets/medication_request_dialog.dart';
 import '../widgets/app_drawer.dart';
+import '../l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   final ApiService apiService;
@@ -301,7 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
       requiredRole: 'USER',
       child: Scaffold(
         appBar: AppBar(
-          title: const Text(AppLocalizations.get('nearbyPharmacies')),
+          title: Text(AppLocalizations.get('nearbyPharmacies')),
           actions: [
             IconButton(
               icon: const Icon(Icons.my_location),
@@ -317,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Search pharmacies...',
+                  hintText: AppLocalizations.get('searchPharmacies'),
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.clear),
