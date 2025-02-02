@@ -63,78 +63,179 @@ class _PharmacistInquiriesScreenState extends State<PharmacistInquiriesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return RoleGuard(
       requiredRole: 'PHARMACIST',
       child: Scaffold(
+        backgroundColor: theme.colorScheme.surface,
         appBar: AppBar(
-          title: const Text('Medication Inquiries'),
+          title: const Text(
+            'Medication Inquiries',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
         drawer: const AppDrawer(),
-        body: RefreshIndicator(
-          onRefresh: _loadInquiries,
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _inquiries.isEmpty
-                  ? const Center(child: Text('No inquiries available'))
-                  : ListView.builder(
-                      itemCount: _inquiries.length,
-                      itemBuilder: (context, index) {
-                        final inquiry = _inquiries[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          child: ListTile(
-                            title: Text(
-                              inquiry.medicationName,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(inquiry.patientNote),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: inquiry.status == 'PENDING'
-                                            ? Colors.orange
-                                            : Colors.green,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        inquiry.status,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    Text(
-                                      DateFormatter.formatDate(inquiry.createdAt),
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () => _showInquiryDetails(inquiry),
-                          ),
-                        );
-                      },
+        body: SafeArea(
+          child: RefreshIndicator(
+            color: theme.colorScheme.primary,
+            onRefresh: _loadInquiries,
+            child: _isLoading
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: theme.colorScheme.primary,
                     ),
+                  )
+                : _inquiries.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.medical_services_outlined,
+                                size: 64,
+                                color: theme.colorScheme.primary.withOpacity(0.5),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No Inquiries Yet',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'You will see medication inquiries from patients here.',
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                        itemCount: _inquiries.length,
+                        itemBuilder: (context, index) {
+                          final inquiry = _inquiries[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: Card(
+                              elevation: 2,
+                              margin: EdgeInsets.zero,
+                              child: InkWell(
+                                onTap: () => _showInquiryDetails(inquiry),
+                                borderRadius: BorderRadius.circular(16),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              color: theme.colorScheme.primary.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Icon(
+                                              Icons.medication_rounded,
+                                              color: theme.colorScheme.primary,
+                                              size: 24,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  inquiry.medicationName,
+                                                  style: theme.textTheme.titleMedium?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  DateFormatter.formatDate(inquiry.createdAt),
+                                                  style: theme.textTheme.bodySmall?.copyWith(
+                                                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: (inquiry.status == 'PENDING'
+                                                      ? Colors.orange
+                                                      : Colors.green)
+                                                  .withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                            child: Text(
+                                              inquiry.status,
+                                              style: theme.textTheme.bodySmall?.copyWith(
+                                                color: inquiry.status == 'PENDING'
+                                                    ? Colors.orange
+                                                    : Colors.green,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (inquiry.patientNote.isNotEmpty) ...[
+                                        const SizedBox(height: 12),
+                                        Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Icon(
+                                                Icons.notes_rounded,
+                                                size: 16,
+                                                color: theme.colorScheme.onSurfaceVariant,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  inquiry.patientNote,
+                                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                                    color: theme.colorScheme.onSurfaceVariant,
+                                                  ),
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+          ),
         ),
       ),
     );
