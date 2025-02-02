@@ -14,11 +14,13 @@ class AppLocaleFr {
 
     // Navigation & Titles
     'appName': 'PharmaSearch',
+    'welcome': 'Bienvenue sur PharmaSearch',
     'myInquiries': 'Mes Demandes',
     'searchMedications': 'Rechercher des Médicaments',
     'nearbyPharmacies': 'Pharmacies à Proximité',
     'pharmacistInquiries': 'Demandes des Pharmaciens',
     'pharmacyManagement': 'Gestion de la Pharmacie',
+    'myPharmacy': 'Ma Pharmacie',
     'profile': 'Profil',
     'logout': 'Déconnexion',
     'recentInquiries': 'Demandes Récentes',
@@ -84,7 +86,6 @@ class AppLocaleFr {
     'checkConnection': 'Veuillez vérifier votre connexion internet et réessayer.',
 
     // Pharmacy Management
-    'myPharmacy': 'Ma Pharmacie',
     'pharmacyDetails': 'Détails de la Pharmacie',
     'pharmacyName': 'Nom',
     'pharmacyLocation': 'Adresse',

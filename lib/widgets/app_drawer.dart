@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/user_service.dart';
 import '../screens/login_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({Key? key}) : super(key: key);
@@ -42,7 +43,7 @@ class AppDrawer extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Welcome to PharmaSearch',
+                      AppLocalizations.get('welcome'),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white,
                       ),
@@ -53,7 +54,7 @@ class AppDrawer extends StatelessWidget {
               if (role == 'USER') ...[
                 ListTile(
                   leading: const Icon(Icons.search),
-                  title: const Text('Search Medications'),
+                  title: Text(AppLocalizations.get('searchMedications')),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushReplacementNamed(context, '/medication-search');
@@ -61,7 +62,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.local_pharmacy),
-                  title: const Text('Nearby Pharmacies'),
+                  title: Text(AppLocalizations.get('nearbyPharmacies')),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushReplacementNamed(context, '/nearby-pharmacies');
@@ -69,7 +70,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.history),
-                  title: const Text('My Inquiries'),
+                  title: Text(AppLocalizations.get('myInquiries')),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/my-inquiries');
@@ -79,7 +80,7 @@ class AppDrawer extends StatelessWidget {
               if (role == 'PHARMACIST') ...[
                 ListTile(
                   leading: const Icon(Icons.local_pharmacy),
-                  title: const Text('My Pharmacy'),
+                  title: Text(AppLocalizations.get('myPharmacy')),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushReplacementNamed(context, '/pharmacy-management');
@@ -87,7 +88,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.message),
-                  title: const Text('Medication Inquiries'),
+                  title: Text(AppLocalizations.get('medicationInquiries')),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushReplacementNamed(context, '/pharmacist-inquiries');
@@ -97,17 +98,18 @@ class AppDrawer extends StatelessWidget {
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.person),
-                title: const Text('Profile'),
+                title: Text(AppLocalizations.get('profile')),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.pushNamed(context, '/profile');
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.exit_to_app),
-                title: const Text('Logout'),
+                leading: const Icon(Icons.logout),
+                title: Text(AppLocalizations.get('logout')),
                 onTap: () async {
-                  await Provider.of<AuthProvider>(context, listen: false).logout();
+                  Navigator.pop(context);
+                  await context.read<AuthProvider>().logout();
                   if (context.mounted) {
                     Navigator.pushAndRemoveUntil(
                       context,
