@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/user_service.dart';
+import '../l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -32,7 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load user information')),
+          SnackBar(content: Text(AppLocalizations.get('updateError'))),
         );
       }
     }
@@ -46,9 +47,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Profile',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.get('profileTitle'),
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
@@ -83,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Failed to load profile',
+                          AppLocalizations.get('updateError'),
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 16,
@@ -134,18 +135,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return [
       _buildProfileSection(
         icon: Icons.person_outline_rounded,
-        label: 'Name',
+        label: AppLocalizations.get('profileName'),
         value: user!['name'],
       ),
       _buildProfileSection(
         icon: Icons.email_outlined,
-        label: 'Email',
+        label: AppLocalizations.get('profileEmail'),
         value: user!['email'],
       ),
       _buildProfileSection(
         icon: Icons.badge_outlined,
-        label: 'Role',
-        value: user!['role'],
+        label: AppLocalizations.get('profileRole'),
+        value: user!['role'] == 'PHARMACIST'
+            ? AppLocalizations.get('pharmacist')
+            : AppLocalizations.get('user'),
       ),
     ];
   }
@@ -157,62 +160,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: Colors.grey[600],
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
-        border: Border.all(
-          color: Colors.grey.shade200,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color(0xFF6B8EB3).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: const Color(0xFF6B8EB3),
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2D3748),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

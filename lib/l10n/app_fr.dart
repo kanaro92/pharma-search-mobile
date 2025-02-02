@@ -8,6 +8,9 @@ class AppLocaleFr {
     'sending': 'Envoi en cours...',
     'search': 'Rechercher',
     'noResults': 'Aucun résultat',
+    'cancel': 'Annuler',
+    'save': 'Enregistrer',
+    'refreshData': 'Actualiser',
 
     // Navigation & Titles
     'appName': 'PharmaSearch',
@@ -40,18 +43,9 @@ class AppLocaleFr {
     'loadingPharmacies': 'Recherche des pharmacies...',
     'locationError': 'Impossible d\'obtenir votre position',
     'enableLocation': 'Veuillez activer la localisation',
-    'pharmacyAddress': 'Adresse',
-    'pharmacyPhone': 'Téléphone',
-    'pharmacyHours': 'Horaires d\'ouverture',
     'loadMorePharmacies': 'Charger plus de pharmacies',
 
-    // Inquiry List
-    'noInquiriesTitle': 'Aucune Demande',
-    'noInquiriesMessage': 'Recherchez des médicaments et envoyez des demandes\naux pharmacies à proximité.',
-    'pending': 'EN ATTENTE',
-    'responded': 'RÉPONDU',
-    'response': 'réponse',
-    'responses': 'réponses',
+    // Time Formatting
     'justNow': 'À l\'instant',
     'minuteAgo': 'il y a 1 minute',
     'minutesAgo': 'il y a {count} minutes',
@@ -65,6 +59,12 @@ class AppLocaleFr {
     'monthsAgo': 'il y a {count} mois',
     'yearAgo': 'il y a 1 an',
     'yearsAgo': 'il y a {count} ans',
+
+    // Inquiry Status
+    'pending': 'EN ATTENTE',
+    'responded': 'RÉPONDU',
+    'response': 'réponse',
+    'responses': 'réponses',
 
     // Pharmacist Inquiries
     'medicationInquiries': 'Demandes de Médicaments',
@@ -83,29 +83,30 @@ class AppLocaleFr {
     'errorLoadingInquiries': 'Erreur lors du chargement des demandes',
     'checkConnection': 'Veuillez vérifier votre connexion internet et réessayer.',
 
-    // Status Labels
-    'statusResponded': 'RÉPONDU',
-
-    // Inquiry Questions
-    'pregnancySafetyQuestion': 'Est-ce sûr de prendre ce médicament pendant la grossesse ?',
-    'recommendedDurationQuestion': 'Quelle est la durée recommandée pour prendre ce médicament ?',
-    'stockAvailabilityQuestion': 'Avez-vous cet antibiotique en stock ?',
-
     // Pharmacy Management
     'myPharmacy': 'Ma Pharmacie',
     'pharmacyDetails': 'Détails de la Pharmacie',
-    'name': 'Nom',
-    'address': 'Adresse',
-    'phone': 'Téléphone',
-    'email': 'E-mail',
-    'openingHours': 'Horaires d\'ouverture',
+    'pharmacyName': 'Nom',
+    'pharmacyLocation': 'Adresse',
+    'pharmacyPhone': 'Téléphone',
+    'pharmacyEmail': 'E-mail',
+    'pharmacyOpeningHours': 'Horaires d\'ouverture',
     'statistics': 'Statistiques',
     'total': 'Total',
     'pharmacyPending': 'En Attente',
     'pharmacyResolved': 'Résolu',
     'editPharmacyDetails': 'Modifier les Détails',
-    'refreshData': 'Actualiser',
-    'save': 'Enregistrer',
-    'cancel': 'Annuler',
+
+    // Profile Screen
+    'profileTitle': 'Profil',
+    'profileName': 'Nom',
+    'profileEmail': 'E-mail',
+    'profileRole': 'Rôle',
+    'pharmacist': 'PHARMACIEN',
+    'user': 'UTILISATEUR',
+    'editProfile': 'Modifier le Profil',
+    'saveChanges': 'Enregistrer les Modifications',
+    'profileUpdated': 'Profil mis à jour avec succès',
+    'updateError': 'Erreur lors de la mise à jour du profil',
   };
 }
