@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/medication_inquiry.dart';
 import '../services/inquiry_service.dart';
 import '../widgets/inquiry_list_item.dart';
+import '../widgets/inquiries_list.dart';
 
 class MyInquiriesScreen extends StatefulWidget {
   const MyInquiriesScreen({Key? key}) : super(key: key);
@@ -227,37 +228,25 @@ class _MyInquiriesScreenState extends State<MyInquiriesScreen> {
                     );
                   }
 
-                  return RefreshIndicator(
-                    color: theme.colorScheme.primary,
+                  return InquiriesList(
+                    inquiries: inquiries,
+                    isLoading: false,
                     onRefresh: () async {
                       setState(() {
                         _loadInquiries();
                       });
                     },
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: inquiries.length,
-                      itemBuilder: (context, index) {
-                        final inquiry = inquiries[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: InquiryListItem(
-                            inquiry: inquiry,
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/inquiry-detail',
-                                arguments: inquiry,
-                              ).then((_) {
-                                setState(() {
-                                  _loadInquiries();
-                                });
-                              });
-                            },
-                          ),
-                        );
-                      },
-                    ),
+                    onInquiryTap: (inquiry) {
+                      Navigator.pushNamed(
+                        context,
+                        '/inquiry-detail',
+                        arguments: inquiry,
+                      ).then((_) {
+                        setState(() {
+                          _loadInquiries();
+                        });
+                      });
+                    },
                   );
                 },
               ),
