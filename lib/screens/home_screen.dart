@@ -301,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
       requiredRole: 'USER',
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Nearby Pharmacies'),
+          title: const Text(AppLocalizations.get('nearbyPharmacies')),
           actions: [
             IconButton(
               icon: const Icon(Icons.my_location),

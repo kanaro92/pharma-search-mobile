@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/loading_overlay.dart';
+import '../l10n/app_localizations.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({Key? key}) : super(key: key);
@@ -65,18 +66,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful! Please login.'),
+          SnackBar(
+            content: Text(AppLocalizations.get('registrationSuccess')),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context); // Go back to login screen
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Registration failed: $e'),
+            content: Text(AppLocalizations.get('registrationError')),
             backgroundColor: Colors.red,
           ),
         );
@@ -124,7 +125,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'Create Account',
+                      AppLocalizations.get('createAccount'),
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -153,11 +154,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                             TextFormField(
                               controller: _usernameController,
                               decoration: InputDecoration(
-                                labelText: 'Username',
-                                prefixIcon: const Icon(
-                                  Icons.person_outline,
-                                  color: Color(0xFF6B8EB3),
-                                ),
+                                labelText: AppLocalizations.get('username'),
+                                prefixIcon: const Icon(Icons.person_outline),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -177,10 +175,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter a username';
+                                  return AppLocalizations.get('usernameRequired');
                                 }
                                 if (value.length < 3) {
-                                  return 'Username must be at least 3 characters';
+                                  return AppLocalizations.get('invalidUsername');
                                 }
                                 return null;
                               },
@@ -189,11 +187,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                             TextFormField(
                               controller: _emailController,
                               decoration: InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: const Icon(
-                                  Icons.email_outlined,
-                                  color: Color(0xFF6B8EB3),
-                                ),
+                                labelText: AppLocalizations.get('email'),
+                                prefixIcon: const Icon(Icons.email_outlined),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -214,10 +209,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter an email';
+                                  return AppLocalizations.get('invalidCredentials');
                                 }
-                                if (!value.contains('@') || !value.contains('.')) {
-                                  return 'Please enter a valid email';
+                                if (!value.contains('@')) {
+                                  return AppLocalizations.get('invalidEmail');
                                 }
                                 return null;
                               },
@@ -226,15 +221,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                             TextFormField(
                               controller: _passwordController,
                               decoration: InputDecoration(
-                                labelText: 'Password',
-                                prefixIcon: const Icon(
-                                  Icons.lock_outline,
-                                  color: Color(0xFF6B8EB3),
-                                ),
+                                labelText: AppLocalizations.get('password'),
+                                prefixIcon: const Icon(Icons.lock_outlined),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                    color: const Color(0xFF6B8EB3),
                                   ),
                                   onPressed: () {
                                     setState(() {
@@ -262,10 +253,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                               obscureText: _obscurePassword,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter a password';
-                                }
-                                if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
+                                  return AppLocalizations.get('invalidCredentials');
                                 }
                                 return null;
                               },
@@ -274,15 +262,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                             TextFormField(
                               controller: _confirmPasswordController,
                               decoration: InputDecoration(
-                                labelText: 'Confirm Password',
-                                prefixIcon: const Icon(
-                                  Icons.lock_outline,
-                                  color: Color(0xFF6B8EB3),
-                                ),
+                                labelText: AppLocalizations.get('confirmPassword'),
+                                prefixIcon: const Icon(Icons.lock_outlined),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                                    color: const Color(0xFF6B8EB3),
                                   ),
                                   onPressed: () {
                                     setState(() {
@@ -309,21 +293,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                               ),
                               obscureText: _obscureConfirmPassword,
                               validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please confirm your password';
-                                }
                                 if (value != _passwordController.text) {
-                                  return 'Passwords do not match';
+                                  return AppLocalizations.get('passwordsDoNotMatch');
                                 }
                                 return null;
                               },
                             ),
                             const SizedBox(height: 24),
-                            const Text(
-                              'I am a:',
-                              style: TextStyle(
+                            Text(
+                              AppLocalizations.get('iAmA'),
+                              style: const TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.bold,
                                 color: Color(0xFF6B8EB3),
                               ),
                             ),
@@ -332,10 +312,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                               children: [
                                 Expanded(
                                   child: RadioListTile<String>(
-                                    title: const Text(
-                                      'Patient',
-                                      style: TextStyle(color: Color(0xFF6B8EB3)),
-                                    ),
+                                    title: Text(AppLocalizations.get('patient')),
                                     value: 'USER',
                                     groupValue: _selectedRole,
                                     activeColor: const Color(0xFF6B8EB3),
@@ -348,10 +325,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                                 ),
                                 Expanded(
                                   child: RadioListTile<String>(
-                                    title: const Text(
-                                      'Pharmacist',
-                                      style: TextStyle(color: Color(0xFF6B8EB3)),
-                                    ),
+                                    title: Text(AppLocalizations.get('pharmacist')),
                                     value: 'PHARMACIST',
                                     groupValue: _selectedRole,
                                     activeColor: const Color(0xFF6B8EB3),
@@ -384,25 +358,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text(
-                                      'Register',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                  : Text(AppLocalizations.get('register')),
                             ),
                             const SizedBox(height: 16),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text(
-                                  'Already have an account?',
-                                  style: TextStyle(
-                                    color: Color(0xFF6B8EB3),
-                                    fontSize: 16,
-                                  ),
+                                Text(
+                                  AppLocalizations.get('alreadyHaveAccount'),
+                                  style: const TextStyle(color: Colors.white),
                                 ),
                                 TextButton(
                                   onPressed: () {
@@ -411,12 +375,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                                   style: TextButton.styleFrom(
                                     foregroundColor: const Color(0xFF6B8EB3),
                                   ),
-                                  child: const Text(
-                                    'Login',
-                                    style: TextStyle(
+                                  child: Text(
+                                    AppLocalizations.get('login'),
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       decoration: TextDecoration.underline,
-                                      fontSize: 16,
                                     ),
                                   ),
                                 ),
