@@ -193,7 +193,34 @@ class ApiService {
     return token != null;
   }
 
-  Future<bool> register(String name, String email, String password) async {
+  Future<bool> register({
+    required String username,
+    required String email,
+    required String password,
+    required String role,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '$baseUrl/auth/register',
+        data: {
+          'name': username,  // Changed from 'username' to 'name' to match backend
+          'email': email,
+          'password': password,
+          'role': role,
+        },
+      );
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print('Registration error: $e');
+      if (e is DioException && e.response?.data != null) {
+        throw e.response?.data['message'] ?? 'Registration failed';
+      }
+      throw 'Registration failed. Please try again.';
+    }
+  }
+
+  Future<bool> registerOld(String name, String email, String password) async {
     try {
       final response = await _dio.post(
         '/auth/register',

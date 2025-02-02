@@ -7,12 +7,14 @@ class AuthProvider with ChangeNotifier {
   final _storage = const FlutterSecureStorage();
   String? _token;
   bool _isAuthenticated = false;
+  String? _userRole;
 
   AuthProvider(this._apiService) {
     _loadToken();
   }
 
   bool get isAuthenticated => _isAuthenticated;
+  String? get userRole => _userRole;
 
   Future<void> _loadToken() async {
     _token = await _storage.read(key: 'token');
@@ -39,10 +41,21 @@ class AuthProvider with ChangeNotifier {
     await _storage.delete(key: 'token');
     _token = null;
     _isAuthenticated = false;
+    _userRole = null;
     notifyListeners();
   }
 
-  Future<bool> register(String name, String email, String password) async {
-    return await _apiService.register(name, email, password);
+  Future<bool> register({
+    required String username,
+    required String email,
+    required String password,
+    required String role,
+  }) async {
+    return await _apiService.register(
+      username: username,
+      email: email,
+      password: password,
+      role: role,
+    );
   }
 }
