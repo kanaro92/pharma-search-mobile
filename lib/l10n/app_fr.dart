@@ -77,5 +77,22 @@ class AppLocaleFr {
     'pregnancySafetyQuestion': 'Est-ce sûr de prendre ce médicament pendant la grossesse ?',
     'recommendedDurationQuestion': 'Quelle est la durée recommandée pour prendre ce médicament ?',
     'stockAvailabilityQuestion': 'Avez-vous cet antibiotique en stock ?',
+
+    // Pharmacy Management
+    'myPharmacy': 'Ma Pharmacie',
+    'pharmacyDetails': 'Détails de la Pharmacie',
+    'name': 'Nom',
+    'address': 'Adresse',
+    'phone': 'Téléphone',
+    'email': 'E-mail',
+    'openingHours': 'Horaires d\'ouverture',
+    'statistics': 'Statistiques',
+    'total': 'Total',
+    'pharmacyPending': 'En Attente',
+    'pharmacyResolved': 'Résolu',
+    'editPharmacyDetails': 'Modifier les Détails',
+    'refreshData': 'Actualiser',
+    'save': 'Enregistrer',
+    'cancel': 'Annuler',
   };
 }

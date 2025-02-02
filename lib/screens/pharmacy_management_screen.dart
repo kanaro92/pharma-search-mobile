@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import '../utils/role_guard.dart';
 import '../widgets/app_drawer.dart';
 import '../models/pharmacy.dart';
+import '../l10n/app_localizations.dart';
 
 class PharmacyManagementScreen extends StatefulWidget {
   final ApiService apiService;
@@ -103,20 +104,20 @@ class _PharmacyManagementScreenState extends State<PharmacyManagementScreen> {
       child: Scaffold(
         backgroundColor: theme.colorScheme.surface,
         appBar: AppBar(
-          title: const Text(
-            'My Pharmacy',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          title: Text(
+            AppLocalizations.get('myPharmacy'),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           actions: [
             if (_pharmacy != null)
               IconButton(
                 icon: const Icon(Icons.edit_rounded),
-                tooltip: 'Edit Pharmacy Details',
+                tooltip: AppLocalizations.get('editPharmacyDetails'),
                 onPressed: _editPharmacy,
               ),
             IconButton(
               icon: const Icon(Icons.refresh_rounded),
-              tooltip: 'Refresh Data',
+              tooltip: AppLocalizations.get('refreshData'),
               onPressed: _loadData,
             ),
           ],
@@ -200,7 +201,7 @@ class _PharmacyManagementScreenState extends State<PharmacyManagementScreen> {
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
-                                      'Pharmacy Details',
+                                      AppLocalizations.get('pharmacyDetails'),
                                       style: theme.textTheme.titleLarge?.copyWith(
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -215,34 +216,38 @@ class _PharmacyManagementScreenState extends State<PharmacyManagementScreen> {
                                     _buildInfoRow(
                                       context: context,
                                       icon: Icons.store_rounded,
-                                      label: 'Name',
+                                      label: AppLocalizations.get('name'),
                                       value: _pharmacy!.name,
                                     ),
+                                    const SizedBox(height: 16),
                                     _buildInfoRow(
                                       context: context,
                                       icon: Icons.location_on_rounded,
-                                      label: 'Address',
+                                      label: AppLocalizations.get('address'),
                                       value: _pharmacy!.address,
                                     ),
+                                    const SizedBox(height: 16),
                                     if (_pharmacy!.phone != null)
                                       _buildInfoRow(
                                         context: context,
                                         icon: Icons.phone_rounded,
-                                        label: 'Phone',
+                                        label: AppLocalizations.get('phone'),
                                         value: _pharmacy!.phone!,
                                       ),
+                                    const SizedBox(height: 16),
                                     if (_pharmacy!.email != null)
                                       _buildInfoRow(
                                         context: context,
                                         icon: Icons.email_rounded,
-                                        label: 'Email',
+                                        label: AppLocalizations.get('email'),
                                         value: _pharmacy!.email!,
                                       ),
+                                    const SizedBox(height: 16),
                                     if (_pharmacy!.openingHours != null)
                                       _buildInfoRow(
                                         context: context,
                                         icon: Icons.access_time_rounded,
-                                        label: 'Opening Hours',
+                                        label: AppLocalizations.get('openingHours'),
                                         value: _pharmacy!.openingHours!,
                                       ),
                                   ],
@@ -251,56 +256,57 @@ class _PharmacyManagementScreenState extends State<PharmacyManagementScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        if (_statistics != null)
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
+                        const SizedBox(height: 24),
+                        // Statistics Card
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withOpacity(0.1),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(16),
+                                    topRight: Radius.circular(16),
+                                  ),
                                 ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withOpacity(0.1),
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(16),
-                                      topRight: Radius.circular(16),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.analytics_rounded,
+                                        color: theme.colorScheme.primary,
+                                        size: 24,
+                                      ),
                                     ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: theme.colorScheme.primary.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Icon(
-                                          Icons.analytics_rounded,
-                                          color: theme.colorScheme.primary,
-                                          size: 24,
-                                        ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      AppLocalizations.get('statistics'),
+                                      style: theme.textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        'Statistics',
-                                        style: theme.textTheme.titleLarge?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
+                              ),
+                              if (_statistics != null)
                                 Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Row(
@@ -308,8 +314,8 @@ class _PharmacyManagementScreenState extends State<PharmacyManagementScreen> {
                                       Expanded(
                                         child: _buildStatCard(
                                           context: context,
-                                          icon: Icons.all_inbox_rounded,
-                                          label: 'Total',
+                                          icon: Icons.question_answer_rounded,
+                                          label: AppLocalizations.get('total'),
                                           value: _statistics!['totalInquiries']?.toString() ?? '0',
                                           color: theme.colorScheme.primary,
                                         ),
@@ -319,7 +325,7 @@ class _PharmacyManagementScreenState extends State<PharmacyManagementScreen> {
                                         child: _buildStatCard(
                                           context: context,
                                           icon: Icons.pending_actions_rounded,
-                                          label: 'Pending',
+                                          label: AppLocalizations.get('pharmacyPending'),
                                           value: _statistics!['pendingInquiries']?.toString() ?? '0',
                                           color: Colors.orange,
                                         ),
@@ -328,8 +334,8 @@ class _PharmacyManagementScreenState extends State<PharmacyManagementScreen> {
                                       Expanded(
                                         child: _buildStatCard(
                                           context: context,
-                                          icon: Icons.task_alt_rounded,
-                                          label: 'Resolved',
+                                          icon: Icons.check_circle_rounded,
+                                          label: AppLocalizations.get('pharmacyResolved'),
                                           value: _statistics!['resolvedInquiries']?.toString() ?? '0',
                                           color: Colors.green,
                                         ),
@@ -337,9 +343,9 @@ class _PharmacyManagementScreenState extends State<PharmacyManagementScreen> {
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
+                            ],
                           ),
+                        ),
                       ],
                     ),
                   ),
@@ -480,30 +486,30 @@ class _EditPharmacyDialogState extends State<_EditPharmacyDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Edit Pharmacy Details'),
+      title: Text(AppLocalizations.get('editPharmacyDetails')),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
+              decoration: InputDecoration(labelText: AppLocalizations.get('name')),
             ),
             TextField(
               controller: _addressController,
-              decoration: const InputDecoration(labelText: 'Address'),
+              decoration: InputDecoration(labelText: AppLocalizations.get('address')),
             ),
             TextField(
               controller: _phoneController,
-              decoration: const InputDecoration(labelText: 'Phone'),
+              decoration: InputDecoration(labelText: AppLocalizations.get('phone')),
             ),
             TextField(
               controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: InputDecoration(labelText: AppLocalizations.get('email')),
             ),
             TextField(
               controller: _openingHoursController,
-              decoration: const InputDecoration(labelText: 'Opening Hours'),
+              decoration: InputDecoration(labelText: AppLocalizations.get('openingHours')),
             ),
           ],
         ),
@@ -511,7 +517,7 @@ class _EditPharmacyDialogState extends State<_EditPharmacyDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.get('cancel')),
         ),
         TextButton(
           onPressed: () {
@@ -525,7 +531,7 @@ class _EditPharmacyDialogState extends State<_EditPharmacyDialog> {
               'longitude': widget.pharmacy.longitude,
             });
           },
-          child: const Text('Save'),
+          child: Text(AppLocalizations.get('save')),
         ),
       ],
     );
