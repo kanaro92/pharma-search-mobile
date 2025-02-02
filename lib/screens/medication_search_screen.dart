@@ -81,18 +81,28 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
       );
 
       if (success) {
+        // Reset form fields
+        _searchController.clear();
+        _noteController.clear();
+        
         // Refresh the inquiries list
         await _loadInquiries();
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Inquiry created successfully')),
+            const SnackBar(
+              content: Text('Inquiry sent successfully'),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to create inquiry')),
+            const SnackBar(
+              content: Text('Failed to send inquiry'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       }
@@ -121,6 +131,24 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays == 0) {
+      if (difference.inHours == 0) {
+        return '${difference.inMinutes} min ago';
+      }
+      return '${difference.inHours} hours ago';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 
   @override
@@ -193,20 +221,35 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
                                   subtitle: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        inquiry.patientNote,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                      Text(inquiry.patientNote),
                                       const SizedBox(height: 4),
-                                      Text(
-                                        'Status: ${inquiry.status}',
-                                        style: TextStyle(
-                                          color: inquiry.status == 'PENDING'
-                                              ? Colors.orange
-                                              : Colors.green,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            'Status: ',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            inquiry.status,
+                                            style: TextStyle(
+                                              color: inquiry.status == 'PENDING'
+                                                  ? Colors.orange
+                                                  : inquiry.status == 'RESPONDED'
+                                                      ? Colors.green
+                                                      : Colors.grey,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Text(
+                                            _formatDate(inquiry.createdAt),
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),

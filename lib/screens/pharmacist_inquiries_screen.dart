@@ -93,11 +93,7 @@ class _PharmacistInquiriesScreenState extends State<PharmacistInquiriesScreen> {
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  inquiry.patientNote,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                Text(inquiry.patientNote),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
@@ -117,14 +113,15 @@ class _PharmacistInquiriesScreenState extends State<PharmacistInquiriesScreen> {
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 12,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const Spacer(),
                                     Text(
-                                      DateFormatter.formatDateTime(inquiry.createdAt),
-                                      style: const TextStyle(
-                                        color: Colors.grey,
+                                      DateFormatter.formatDate(inquiry.createdAt),
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
                                         fontSize: 12,
                                       ),
                                     ),
