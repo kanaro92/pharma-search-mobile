@@ -96,80 +96,250 @@ class _PharmacyManagementScreenState extends State<PharmacyManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return RoleGuard(
       requiredRole: 'PHARMACIST',
       child: Scaffold(
+        backgroundColor: theme.colorScheme.surface,
         appBar: AppBar(
-          title: const Text('My Pharmacy'),
+          title: const Text(
+            'My Pharmacy',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           actions: [
             if (_pharmacy != null)
               IconButton(
-                icon: const Icon(Icons.edit),
+                icon: const Icon(Icons.edit_rounded),
+                tooltip: 'Edit Pharmacy Details',
                 onPressed: _editPharmacy,
               ),
             IconButton(
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh_rounded),
+              tooltip: 'Refresh Data',
               onPressed: _loadData,
             ),
           ],
         ),
         drawer: const AppDrawer(),
         body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: theme.colorScheme.primary,
+                ),
+              )
             : _pharmacy == null
-                ? const Center(child: Text('No pharmacy data available'))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.store_rounded,
+                          size: 64,
+                          color: theme.colorScheme.primary.withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No pharmacy data available',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton.icon(
+                          onPressed: _loadData,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Refresh'),
+                        ),
+                      ],
+                    ),
+                  )
                 : SingleChildScrollView(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Pharmacy Details',
-                                  style: Theme.of(context).textTheme.titleLarge,
+                        // Pharmacy Details Card
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withOpacity(0.1),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(16),
+                                    topRight: Radius.circular(16),
+                                  ),
                                 ),
-                                const Divider(),
-                                _buildInfoRow('Name', _pharmacy!.name),
-                                _buildInfoRow('Address', _pharmacy!.address),
-                                if (_pharmacy!.phone != null)
-                                  _buildInfoRow('Phone', _pharmacy!.phone!),
-                                if (_pharmacy!.email != null)
-                                  _buildInfoRow('Email', _pharmacy!.email!),
-                                if (_pharmacy!.openingHours != null)
-                                  _buildInfoRow('Opening Hours', _pharmacy!.openingHours!),
-                              ],
-                            ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.local_pharmacy_rounded,
+                                        color: theme.colorScheme.primary,
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Pharmacy Details',
+                                      style: theme.textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  children: [
+                                    _buildInfoRow(
+                                      context: context,
+                                      icon: Icons.store_rounded,
+                                      label: 'Name',
+                                      value: _pharmacy!.name,
+                                    ),
+                                    _buildInfoRow(
+                                      context: context,
+                                      icon: Icons.location_on_rounded,
+                                      label: 'Address',
+                                      value: _pharmacy!.address,
+                                    ),
+                                    if (_pharmacy!.phone != null)
+                                      _buildInfoRow(
+                                        context: context,
+                                        icon: Icons.phone_rounded,
+                                        label: 'Phone',
+                                        value: _pharmacy!.phone!,
+                                      ),
+                                    if (_pharmacy!.email != null)
+                                      _buildInfoRow(
+                                        context: context,
+                                        icon: Icons.email_rounded,
+                                        label: 'Email',
+                                        value: _pharmacy!.email!,
+                                      ),
+                                    if (_pharmacy!.openingHours != null)
+                                      _buildInfoRow(
+                                        context: context,
+                                        icon: Icons.access_time_rounded,
+                                        label: 'Opening Hours',
+                                        value: _pharmacy!.openingHours!,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 16),
-                        if (_statistics != null) ...[
-                          Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Statistics',
-                                    style: Theme.of(context).textTheme.titleLarge,
+                        if (_statistics != null)
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary.withOpacity(0.1),
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(16),
+                                      topRight: Radius.circular(16),
+                                    ),
                                   ),
-                                  const Divider(),
-                                  _buildInfoRow('Total Inquiries', 
-                                    _statistics!['totalInquiries']?.toString() ?? '0'),
-                                  _buildInfoRow('Pending Inquiries', 
-                                    _statistics!['pendingInquiries']?.toString() ?? '0'),
-                                  _buildInfoRow('Resolved Inquiries', 
-                                    _statistics!['resolvedInquiries']?.toString() ?? '0'),
-                                ],
-                              ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(
+                                          Icons.analytics_rounded,
+                                          color: theme.colorScheme.primary,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'Statistics',
+                                        style: theme.textTheme.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildStatCard(
+                                          context: context,
+                                          icon: Icons.all_inbox_rounded,
+                                          label: 'Total',
+                                          value: _statistics!['totalInquiries']?.toString() ?? '0',
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _buildStatCard(
+                                          context: context,
+                                          icon: Icons.pending_actions_rounded,
+                                          label: 'Pending',
+                                          value: _statistics!['pendingInquiries']?.toString() ?? '0',
+                                          color: Colors.orange,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _buildStatCard(
+                                          context: context,
+                                          icon: Icons.task_alt_rounded,
+                                          label: 'Resolved',
+                                          value: _statistics!['resolvedInquiries']?.toString() ?? '0',
+                                          color: Colors.green,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
                       ],
                     ),
                   ),
@@ -177,24 +347,91 @@ class _PharmacyManagementScreenState extends State<PharmacyManagementScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    final theme = Theme.of(context);
+    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(value),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: theme.textTheme.bodyLarge,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 28,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
           ),
         ],
       ),
