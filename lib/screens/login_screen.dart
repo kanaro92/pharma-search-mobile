@@ -37,16 +37,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF6B8EB3), // Steel blue color
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).primaryColor.withOpacity(0.8),
-              Theme.of(context).primaryColor.withOpacity(0.6),
-            ],
-          ),
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          color: Color(0xFF6B8EB3), // Steel blue color
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -61,14 +57,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     // App Logo/Icon
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white,
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.local_pharmacy,
                         size: 64,
-                        color: Theme.of(context).primaryColor,
+                        color: Color(0xFF6B8EB3), // Steel blue color
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -103,14 +99,24 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               controller: _emailController,
                               decoration: InputDecoration(
                                 labelText: 'Email',
-                                prefixIcon: const Icon(Icons.email_outlined),
+                                prefixIcon: const Icon(
+                                  Icons.email_outlined,
+                                  color: Color(0xFF6B8EB3),
+                                ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Theme.of(context).primaryColor.withOpacity(0.5),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF6B8EB3),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF6B8EB3),
+                                    width: 2,
                                   ),
                                 ),
                               ),
@@ -130,10 +136,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               controller: _passwordController,
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                prefixIcon: const Icon(Icons.lock_outline),
+                                prefixIcon: const Icon(
+                                  Icons.lock_outline,
+                                  color: Color(0xFF6B8EB3),
+                                ),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                    color: const Color(0xFF6B8EB3),
                                   ),
                                   onPressed: () {
                                     setState(() {
@@ -146,8 +156,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Theme.of(context).primaryColor.withOpacity(0.5),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF6B8EB3),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF6B8EB3),
+                                    width: 2,
                                   ),
                                 ),
                               ),
@@ -167,6 +184,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               onPressed: _isLoading ? null : _login,
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 16),
+                                backgroundColor: const Color(0xFF6B8EB3),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -186,6 +204,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
                                     ),
                             ),
@@ -197,9 +216,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
+                        const Text(
                           "Don't have an account?",
-                          style: TextStyle(color: Colors.white.withOpacity(0.9)),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
@@ -218,6 +240,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               decoration: TextDecoration.underline,
+                              fontSize: 16,
                             ),
                           ),
                         ),
