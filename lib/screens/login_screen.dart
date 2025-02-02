@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
+import '../l10n/app_localizations.dart';
 import 'role_based_main_screen.dart';
 import 'registration_screen.dart';
 
@@ -69,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'PharmaSearch',
+                      AppLocalizations.get('pharmaSearch'),
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -98,11 +99,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             TextFormField(
                               controller: _emailController,
                               decoration: InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: const Icon(
-                                  Icons.email_outlined,
-                                  color: Color(0xFF6B8EB3),
-                                ),
+                                labelText: AppLocalizations.get('email'),
+                                prefixIcon: const Icon(Icons.email_outlined),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -123,10 +121,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
+                                  return AppLocalizations.get('invalidCredentials');
                                 }
                                 if (!value.contains('@')) {
-                                  return 'Please enter a valid email';
+                                  return AppLocalizations.get('invalidEmail');
                                 }
                                 return null;
                               },
@@ -135,11 +133,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             TextFormField(
                               controller: _passwordController,
                               decoration: InputDecoration(
-                                labelText: 'Password',
-                                prefixIcon: const Icon(
-                                  Icons.lock_outline,
-                                  color: Color(0xFF6B8EB3),
-                                ),
+                                labelText: AppLocalizations.get('password'),
+                                prefixIcon: const Icon(Icons.lock_outlined),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -171,17 +166,17 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               obscureText: _obscurePassword,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter your password';
+                                  return AppLocalizations.get('invalidCredentials');
                                 }
                                 if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
+                                  return AppLocalizations.get('passwordLength');
                                 }
                                 return null;
                               },
                             ),
                             const SizedBox(height: 24),
                             ElevatedButton(
-                              onPressed: _isLoading ? null : _login,
+                              onPressed: _isLoading ? null : _handleLogin,
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 backgroundColor: const Color(0xFF6B8EB3),
@@ -199,9 +194,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text(
-                                      'Login',
-                                      style: TextStyle(
+                                  : Text(
+                                      AppLocalizations.get('login'),
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
@@ -216,31 +211,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          "Don't have an account?",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
+                        Text(
+                          AppLocalizations.get('noAccount'),
+                          style: const TextStyle(color: Colors.white),
                         ),
                         TextButton(
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => const RegistrationScreen(),
-                              ),
+                              MaterialPageRoute(builder: (context) => const RegistrationScreen()),
                             );
                           },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text(
-                            'Register',
-                            style: TextStyle(
+                          child: Text(
+                            AppLocalizations.get('register'),
+                            style: const TextStyle(
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
                               decoration: TextDecoration.underline,
-                              fontSize: 16,
                             ),
                           ),
                         ),
@@ -256,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
-  Future<void> _login() async {
+  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -264,26 +251,26 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     });
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final apiService = Provider.of<ApiService>(context, listen: false);
-      final success = await authProvider.login(
+      final authProvider = context.read<AuthProvider>();
+      final apiService = context.read<ApiService>();
+      await authProvider.login(
         _emailController.text.trim(),
         _passwordController.text,
       );
 
-      if (!mounted) return;
-
-      if (success) {
+      if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => RoleBasedMainScreen(apiService: apiService),
           ),
         );
-      } else {
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid email or password'),
+          SnackBar(
+            content: Text(AppLocalizations.get('loginError')),
             backgroundColor: Colors.red,
           ),
         );

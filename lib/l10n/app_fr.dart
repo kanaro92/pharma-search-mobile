@@ -109,5 +109,14 @@ class AppLocaleFr {
     'saveChanges': 'Enregistrer les Modifications',
     'profileUpdated': 'Profil mis à jour avec succès',
     'updateError': 'Erreur lors de la mise à jour du profil',
+
+    // Authentication
+    'login': 'Connexion',
+    'email': 'E-mail',
+    'password': 'Mot de passe',
+    'register': 'S\'inscrire',
+    'noAccount': 'Vous n\'avez pas de compte ?',
+    'invalidCredentials': 'E-mail ou mot de passe incorrect',
+    'loginError': 'Erreur lors de la connexion',
   };
 }
