@@ -71,7 +71,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context);
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/login',
+          (route) => false,
+        );
       }
     } catch (e) {
       if (mounted) {

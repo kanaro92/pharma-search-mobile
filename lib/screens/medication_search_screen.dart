@@ -4,6 +4,7 @@ import '../utils/role_guard.dart';
 import '../models/medication_inquiry.dart';
 import '../widgets/inquiries_list.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/app_drawer.dart';
 import './inquiry_detail_screen.dart';
 
 class MedicationSearchScreen extends StatefulWidget {
@@ -121,11 +122,18 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
       child: Scaffold(
         backgroundColor: theme.colorScheme.surface,
         appBar: AppBar(
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
           title: Text(
             AppLocalizations.get('searchMedications'),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
+        drawer: const AppDrawer(),
         body: SafeArea(
           child: Column(
             children: [

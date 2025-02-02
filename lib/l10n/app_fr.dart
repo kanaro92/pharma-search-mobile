@@ -37,7 +37,7 @@ class AppLocaleFr {
     // Nearby Pharmacies Screen
     'searchPharmaciesHint': 'Rechercher des pharmacies...',
     'noPharmaciesFound': 'Aucune pharmacie trouvée',
-    'kmAway': '{count} km',
+    'kmAway': '1.2 km',
     'getDirections': 'Itinéraire',
     'viewDetails': 'Voir détails',
     'callPharmacy': 'Appeler',

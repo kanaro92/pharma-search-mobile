@@ -18,7 +18,9 @@ class PharmacyListItem extends StatelessWidget {
 
   String _formatDistance(double? distance) {
     if (distance == null) return '';
-    return '${distance.toStringAsFixed(1)} ${AppLocalizations.get('kmAway')}';
+    // Format with French locale (using comma as decimal separator)
+    final distanceStr = distance.toStringAsFixed(1).replaceAll('.', ',');
+    return '$distanceStr km';
   }
 
   @override

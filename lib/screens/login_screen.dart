@@ -259,11 +259,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       );
 
       if (mounted) {
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (context) => RoleBasedMainScreen(apiService: apiService),
           ),
+          (route) => false, // This removes all previous routes
         );
       }
     } catch (e) {
