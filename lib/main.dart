@@ -75,7 +75,7 @@ class MyApp extends StatelessWidget {
                 },
               ),
           '/login': (context) => const LoginScreen(),
-          '/my-inquiries': (context) => const MyInquiriesScreen(),
+          '/my-inquiries': (context) => MyInquiriesScreen(apiService: apiService),
           '/medication-search': (context) => MedicationSearchScreen(apiService: apiService),
           '/nearby-pharmacies': (context) => NearbyPharmaciesScreen(apiService: apiService),
           '/pharmacist-inquiries': (context) => PharmacistInquiriesScreen(apiService: apiService),
