@@ -153,256 +153,334 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return RoleGuard(
       requiredRole: 'USER',
       child: Scaffold(
-        backgroundColor: const Color(0xFF6B8EB3),
+        backgroundColor: theme.colorScheme.surface,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.white),
           title: const Text(
             'Search Medications',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
         drawer: const AppDrawer(),
-        body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            color: Color(0xFF6B8EB3),
-          ),
+        body: SafeArea(
           child: Column(
             children: [
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 16),
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
+              // Search Section
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextField(
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Search TextField
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
-                          labelText: 'Medication Name',
-                          hintText: 'Enter medication name',
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: Color(0xFF6B8EB3),
+                          hintText: 'Search medications...',
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF6B8EB3),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF6B8EB3),
-                              width: 2,
-                            ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
+                    ),
+                    const SizedBox(height: 12),
+                    // Notes TextField
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextField(
                         controller: _noteController,
                         maxLines: 3,
                         decoration: InputDecoration(
-                          labelText: 'Additional Notes',
-                          hintText: 'Enter any specific requirements or notes',
-                          alignLabelWithHint: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF6B8EB3),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF6B8EB3),
-                              width: 2,
-                            ),
-                          ),
+                          hintText: 'Additional notes for the pharmacist...',
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.all(16),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _isLoading ? null : _createInquiry,
-                          icon: const Icon(Icons.send),
-                          label: const Text(
-                            'Send Inquiry to Pharmacists',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6B8EB3),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 2,
-                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Send Button
+                    ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _createInquiry,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'My Inquiries',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF6B8EB3),
-                        ),
+                      icon: _isLoading
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: theme.colorScheme.onPrimary,
+                              ),
+                            )
+                          : const Icon(Icons.send_rounded),
+                      label: Text(_isLoading ? 'Sending...' : 'Send Inquiry to Pharmacists'),
+                    ),
+                  ],
+                ),
+              ),
+              // My Inquiries Section
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.history_rounded,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Recent Inquiries',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 16),
-                      Expanded(
-                        child: _isLoading
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                  color: Color(0xFF6B8EB3),
+                    ),
+                  ],
+                ),
+              ),
+              // Inquiries List
+              Expanded(
+                child: _isLoading && _inquiries.isEmpty
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: theme.colorScheme.primary,
+                        ),
+                      )
+                    : _inquiries.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.medication_rounded,
+                                  size: 64,
+                                  color: theme.colorScheme.primary.withOpacity(0.5),
                                 ),
-                              )
-                            : _inquiries.isEmpty
-                                ? Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.inbox_outlined,
-                                          size: 64,
-                                          color: Colors.grey[400],
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No Inquiries Yet',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Search for medications and send inquiries\nto nearby pharmacies.',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            color: theme.colorScheme.primary,
+                            onRefresh: _loadInquiries,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: _inquiries.length,
+                              itemBuilder: (context, index) {
+                                final inquiry = _inquiries[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Material(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: InkWell(
+                                      onTap: () => _showInquiryDetails(inquiry),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
                                         ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          'No inquiries yet',
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    itemCount: _inquiries.length,
-                                    itemBuilder: (context, index) {
-                                      final inquiry = _inquiries[index];
-                                      return Card(
-                                        margin: const EdgeInsets.only(bottom: 12),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          side: BorderSide(
-                                            color: Colors.grey.shade200,
-                                          ),
-                                        ),
-                                        elevation: 2,
-                                        child: ListTile(
-                                          contentPadding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 8,
-                                          ),
-                                          title: Text(
-                                            inquiry.medicationName,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          subtitle: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              if (inquiry.patientNote.isNotEmpty) ...[
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  inquiry.patientNote,
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                  ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 12,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                                                borderRadius: const BorderRadius.only(
+                                                  topLeft: Radius.circular(16),
+                                                  topRight: Radius.circular(16),
                                                 ),
-                                              ],
-                                              const SizedBox(height: 8),
-                                              Row(
+                                              ),
+                                              child: Row(
                                                 children: [
                                                   Container(
-                                                    padding: const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 4,
-                                                    ),
+                                                    padding: const EdgeInsets.all(8),
                                                     decoration: BoxDecoration(
-                                                      color: inquiry.status == 'PENDING'
-                                                          ? Colors.orange.withOpacity(0.2)
-                                                          : inquiry.status == 'RESPONDED'
-                                                              ? Colors.green.withOpacity(0.2)
-                                                              : Colors.grey.withOpacity(0.2),
-                                                      borderRadius: BorderRadius.circular(12),
+                                                      color: theme.colorScheme.primary.withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(8),
                                                     ),
+                                                    child: Icon(
+                                                      Icons.medication_rounded,
+                                                      color: theme.colorScheme.primary,
+                                                      size: 20,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
                                                     child: Text(
-                                                      inquiry.status,
-                                                      style: TextStyle(
-                                                        color: inquiry.status == 'PENDING'
-                                                            ? Colors.orange
-                                                            : inquiry.status == 'RESPONDED'
-                                                                ? Colors.green
-                                                                : Colors.grey,
+                                                      inquiry.medicationName,
+                                                      style: theme.textTheme.titleMedium?.copyWith(
                                                         fontWeight: FontWeight.bold,
-                                                        fontSize: 12,
                                                       ),
                                                     ),
                                                   ),
-                                                  const Spacer(),
-                                                  Text(
-                                                    _formatDate(inquiry.createdAt),
-                                                    style: TextStyle(
-                                                      color: Colors.grey[600],
-                                                      fontSize: 12,
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 6,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: (inquiry.status == 'PENDING'
+                                                              ? Colors.orange
+                                                              : Colors.green)
+                                                          .withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(20),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Icon(
+                                                          inquiry.status == 'PENDING'
+                                                              ? Icons.pending_rounded
+                                                              : Icons.check_circle_rounded,
+                                                          color: inquiry.status == 'PENDING'
+                                                              ? Colors.orange
+                                                              : Colors.green,
+                                                          size: 16,
+                                                        ),
+                                                        const SizedBox(width: 4),
+                                                        Text(
+                                                          inquiry.status,
+                                                          style: theme.textTheme.bodySmall?.copyWith(
+                                                            color: inquiry.status == 'PENDING'
+                                                                ? Colors.orange
+                                                                : Colors.green,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
                                                 ],
                                               ),
-                                            ],
-                                          ),
-                                          trailing: Container(
-                                            width: 32,
-                                            height: 32,
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFF6B8EB3).withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(16),
                                             ),
-                                            child: const Icon(
-                                              Icons.chevron_right,
-                                              color: Color(0xFF6B8EB3),
-                                              size: 20,
+                                            if (inquiry.patientNote.isNotEmpty)
+                                              Padding(
+                                                padding: const EdgeInsets.all(16),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(12),
+                                                  decoration: BoxDecoration(
+                                                    color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                  ),
+                                                  child: Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Icon(
+                                                        Icons.notes_rounded,
+                                                        size: 16,
+                                                        color: theme.colorScheme.onSurfaceVariant,
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Expanded(
+                                                        child: Text(
+                                                          inquiry.patientNote,
+                                                          style: theme.textTheme.bodyMedium?.copyWith(
+                                                            color: theme.colorScheme.onSurfaceVariant,
+                                                          ),
+                                                          maxLines: 2,
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            Padding(
+                                              padding: const EdgeInsets.all(16),
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.access_time_rounded,
+                                                    size: 16,
+                                                    color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    _formatDate(inquiry.createdAt),
+                                                    style: theme.textTheme.bodySmall?.copyWith(
+                                                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                                    ),
+                                                  ),
+                                                  if (inquiry.messages != null && inquiry.messages!.isNotEmpty) ...[
+                                                    const SizedBox(width: 16),
+                                                    Icon(
+                                                      Icons.chat_rounded,
+                                                      size: 16,
+                                                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      '${inquiry.messages!.length} ${inquiry.messages!.length == 1 ? 'response' : 'responses'}',
+                                                      style: theme.textTheme.bodySmall?.copyWith(
+                                                        color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                          onTap: () => _showInquiryDetails(inquiry),
+                                          ],
                                         ),
-                                      );
-                                    },
+                                      ),
+                                    ),
                                   ),
-                      ),
-                    ],
-                  ),
-                ),
+                                );
+                              },
+                            ),
+                          ),
               ),
             ],
           ),
