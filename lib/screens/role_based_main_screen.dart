@@ -3,6 +3,7 @@ import '../services/user_service.dart';
 import '../services/api_service.dart';
 import 'home_screen.dart';
 import 'pharmacist_home_screen.dart';
+import 'pharmacist_inquiries_screen.dart';
 import 'login_screen.dart';
 
 class RoleBasedMainScreen extends StatefulWidget {
@@ -73,7 +74,7 @@ class _RoleBasedMainScreenState extends State<RoleBasedMainScreen> {
     if (_userRole == null) {
       return const LoginScreen();
     } else if (_userRole == 'PHARMACIST') {
-      return PharmacistHomeScreen(apiService: widget.apiService);
+      return PharmacistInquiriesScreen(apiService: widget.apiService);
     } else {
       return HomeScreen(apiService: widget.apiService);
     }
