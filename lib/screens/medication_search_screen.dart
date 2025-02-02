@@ -2,23 +2,22 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/role_guard.dart';
 import '../models/medication_inquiry.dart';
-import '../widgets/app_drawer.dart';
 import '../widgets/inquiries_list.dart';
+import '../l10n/app_localizations.dart';
 import './inquiry_detail_screen.dart';
 
 class MedicationSearchScreen extends StatefulWidget {
   final ApiService apiService;
 
-  const MedicationSearchScreen({Key? key, required this.apiService})
-      : super(key: key);
+  const MedicationSearchScreen({Key? key, required this.apiService}) : super(key: key);
 
   @override
   _MedicationSearchScreenState createState() => _MedicationSearchScreenState();
 }
 
 class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _noteController = TextEditingController();
+  final _searchController = TextEditingController();
+  final _notesController = TextEditingController();
   List<MedicationInquiry> _inquiries = [];
   bool _isLoading = false;
 
@@ -26,13 +25,6 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
   void initState() {
     super.initState();
     _loadInquiries();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _noteController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadInquiries() async {
@@ -48,7 +40,7 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error loading inquiries: $e'),
+          content: Text(AppLocalizations.get('errorLoadingInquiries')),
           backgroundColor: Colors.red,
         ),
       );
@@ -59,12 +51,12 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
     }
   }
 
-  Future<void> _createInquiry() async {
+  Future<void> _sendInquiry() async {
     if (_searchController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a medication name'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: Text(AppLocalizations.get('enterMedicationName')),
+          backgroundColor: Colors.orange,
         ),
       );
       return;
@@ -75,49 +67,36 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
     });
 
     try {
-      final success = await widget.apiService.createMedicationInquiry(
-        _searchController.text.trim(),
-        _noteController.text.trim(),
+      final success = await widget.apiService.sendMedicationInquiry(
+        _searchController.text,
+        _notesController.text,
       );
 
       if (success) {
-        // Reset form fields
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.get('inquirySentSuccess')),
+            backgroundColor: Colors.green,
+          ),
+        );
+
         _searchController.clear();
-        _noteController.clear();
-        
-        // Refresh the inquiries list
-        await _loadInquiries();
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Inquiry sent successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
+        _notesController.clear();
+        _loadInquiries();
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to send inquiry'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        throw Exception('Failed to send inquiry');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.get('inquirySentError')),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -136,18 +115,17 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return RoleGuard(
       requiredRole: 'USER',
       child: Scaffold(
         backgroundColor: theme.colorScheme.surface,
         appBar: AppBar(
-          title: const Text(
-            'Search Medications',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          title: Text(
+            AppLocalizations.get('searchMedications'),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
-        drawer: const AppDrawer(),
         body: SafeArea(
           child: Column(
             children: [
@@ -176,7 +154,7 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
-                          hintText: 'Search medications...',
+                          hintText: AppLocalizations.get('searchMedicationsHint'),
                           prefixIcon: Icon(
                             Icons.search_rounded,
                             color: theme.colorScheme.onSurfaceVariant,
@@ -197,10 +175,10 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: TextField(
-                        controller: _noteController,
+                        controller: _notesController,
                         maxLines: 3,
                         decoration: InputDecoration(
-                          hintText: 'Additional notes for the pharmacist...',
+                          hintText: AppLocalizations.get('additionalNotesHint'),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.all(16),
                         ),
@@ -209,7 +187,7 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
                     const SizedBox(height: 16),
                     // Send Button
                     ElevatedButton.icon(
-                      onPressed: _isLoading ? null : _createInquiry,
+                      onPressed: _isLoading ? null : _sendInquiry,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
@@ -226,12 +204,14 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
                               ),
                             )
                           : const Icon(Icons.send_rounded),
-                      label: Text(_isLoading ? 'Sending...' : 'Send Inquiry to Pharmacists'),
+                      label: Text(
+                        AppLocalizations.get(_isLoading ? 'sending' : 'sendInquiryButton'),
+                      ),
                     ),
                   ],
                 ),
               ),
-              // My Inquiries Section
+              // Recent Inquiries Header
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -243,7 +223,7 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Recent Inquiries',
+                      AppLocalizations.get('recentInquiries'),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -265,5 +245,12 @@ class _MedicationSearchScreenState extends State<MedicationSearchScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _notesController.dispose();
+    super.dispose();
   }
 }

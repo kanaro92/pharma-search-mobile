@@ -4,6 +4,7 @@ import '../utils/role_guard.dart';
 import '../models/medication_inquiry.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/inquiries_list.dart';
+import '../l10n/app_localizations.dart';
 import './inquiry_detail_screen.dart';
 
 class MyInquiriesScreen extends StatefulWidget {
@@ -38,7 +39,7 @@ class _MyInquiriesScreenState extends State<MyInquiriesScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error loading inquiries: $e'),
+          content: Text(AppLocalizations.get('errorLoadingInquiries')),
           backgroundColor: Colors.red,
         ),
       );
@@ -70,9 +71,9 @@ class _MyInquiriesScreenState extends State<MyInquiriesScreen> {
       child: Scaffold(
         backgroundColor: theme.colorScheme.surface,
         appBar: AppBar(
-          title: const Text(
-            'My Inquiries',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          title: Text(
+            AppLocalizations.get('myInquiries'),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
         drawer: const AppDrawer(),
@@ -108,7 +109,7 @@ class _MyInquiriesScreenState extends State<MyInquiriesScreen> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Recent Inquiries',
+                      AppLocalizations.get('recentInquiries'),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import '../models/pharmacy.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
+import '../models/pharmacy.dart';
+import '../utils/role_guard.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/pharmacy_list_item.dart';
 import '../widgets/medication_request_dialog.dart';
 
 class NearbyPharmaciesScreen extends StatefulWidget {
   final ApiService apiService;
 
-  const NearbyPharmaciesScreen({
-    Key? key,
-    required this.apiService,
-  }) : super(key: key);
+  const NearbyPharmaciesScreen({Key? key, required this.apiService}) : super(key: key);
 
   @override
-  State<NearbyPharmaciesScreen> createState() => _NearbyPharmaciesScreenState();
+  _NearbyPharmaciesScreenState createState() => _NearbyPharmaciesScreenState();
 }
 
 class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
@@ -64,7 +64,7 @@ class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       setState(() {
-        _error = 'Location services are disabled. Please enable the services';
+        _error = AppLocalizations.get('locationServicesDisabled');
       });
       return false;
     }
@@ -74,7 +74,7 @@ class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         setState(() {
-          _error = 'Location permissions are denied';
+          _error = AppLocalizations.get('locationPermissionsDenied');
         });
         return false;
       }
@@ -82,7 +82,7 @@ class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
 
     if (permission == LocationPermission.deniedForever) {
       setState(() {
-        _error = 'Location permissions are permanently denied';
+        _error = AppLocalizations.get('locationPermissionsPermanentlyDenied');
       });
       return false;
     }
@@ -163,14 +163,36 @@ class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
     }
   }
 
-  void _showRequestDialog(Pharmacy pharmacy) {
-    showDialog(
+  void _showPharmacyDetails(Pharmacy pharmacy) {
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => MedicationRequestDialog(
         pharmacy: pharmacy,
         apiService: widget.apiService,
       ),
     );
+  }
+
+  void _openMaps(Pharmacy pharmacy) async {
+    final url = 'https://www.google.com/maps/dir/?api=1&destination=${pharmacy.latitude},${pharmacy.longitude}';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  void _callPharmacy(Pharmacy pharmacy) async {
+    final url = 'tel:${pharmacy.phone}';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   @override
@@ -181,9 +203,9 @@ class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Nearby Pharmacies',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.get('nearbyPharmacies'),
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
@@ -210,7 +232,7 @@ class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Search pharmacies...',
+                  hintText: AppLocalizations.get('searchPharmaciesHint'),
                   hintStyle: TextStyle(
                     color: Colors.grey[500],
                   ),
@@ -312,7 +334,7 @@ class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'No pharmacies found nearby',
+                                    AppLocalizations.get('noPharmaciesFound'),
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 16,
@@ -322,14 +344,15 @@ class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
                               ),
                             )
                           : ListView.builder(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
                               itemCount: _pharmacies.length,
+                              padding: const EdgeInsets.only(top: 8, bottom: 24),
                               itemBuilder: (context, index) {
                                 final pharmacy = _pharmacies[index];
                                 return PharmacyListItem(
                                   pharmacy: pharmacy,
-                                  onRequestMedication: () => _showRequestDialog(pharmacy),
-                                  currentPosition: _currentPosition,
+                                  onTap: () => _showPharmacyDetails(pharmacy),
+                                  onDirections: () => _openMaps(pharmacy),
+                                  onCall: () => _callPharmacy(pharmacy),
                                 );
                               },
                             ),
@@ -361,7 +384,7 @@ class _NearbyPharmaciesScreenState extends State<NearbyPharmaciesScreen> {
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      'Location not available',
+                                      AppLocalizations.get('locationNotAvailable'),
                                       style: TextStyle(
                                         color: Colors.grey[600],
                                         fontSize: 16,

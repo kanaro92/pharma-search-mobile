@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/pharmacy.dart';
 import '../services/api_service.dart';
+import '../l10n/app_localizations.dart';
 
 class MedicationRequestDialog extends StatefulWidget {
   final Pharmacy pharmacy;
@@ -18,22 +19,22 @@ class MedicationRequestDialog extends StatefulWidget {
 
 class _MedicationRequestDialogState extends State<MedicationRequestDialog> {
   final _medicationController = TextEditingController();
-  final _noteController = TextEditingController();
+  final _notesController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
     _medicationController.dispose();
-    _noteController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
   Future<void> _sendRequest() async {
     if (_medicationController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a medication name'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: Text(AppLocalizations.get('enterMedicationName')),
+          backgroundColor: Colors.orange,
         ),
       );
       return;
@@ -44,30 +45,31 @@ class _MedicationRequestDialogState extends State<MedicationRequestDialog> {
     });
 
     try {
-      final success = await widget.apiService.createMedicationRequest(
+      final success = await widget.apiService.sendMedicationInquiry(
         _medicationController.text,
-        _noteController.text.isEmpty ? null : _noteController.text,
-        widget.pharmacy,
+        _notesController.text,
       );
 
       if (success) {
         if (mounted) {
-          Navigator.pop(context);
+          Navigator.of(context).pop(true);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Request sent successfully')),
+            SnackBar(
+              content: Text(AppLocalizations.get('inquirySentSuccess')),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to send request')),
-          );
-        }
+        throw Exception('Failed to send inquiry');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send request: $e')),
+          SnackBar(
+            content: Text(AppLocalizations.get('inquirySentError')),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -81,50 +83,82 @@ class _MedicationRequestDialogState extends State<MedicationRequestDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Request Medication'),
-      content: SingleChildScrollView(
+    final theme = Theme.of(context);
+
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _medicationController,
-              decoration: const InputDecoration(
-                labelText: 'Medication Name',
-                hintText: 'Enter medication name',
-                prefixIcon: Icon(Icons.medication),
-                border: OutlineInputBorder(),
+            Text(
+              widget.pharmacy.name,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 4),
+            Text(
+              widget.pharmacy.address,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+            const SizedBox(height: 20),
             TextField(
-              controller: _noteController,
+              controller: _medicationController,
+              decoration: InputDecoration(
+                hintText: AppLocalizations.get('searchMedicationsHint'),
+                prefixIcon: Icon(
+                  Icons.medication_rounded,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _notesController,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Additional Notes',
-                hintText: 'Enter any additional information (optional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: AppLocalizations.get('additionalNotesHint'),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _sendRequest,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: _isLoading
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: theme.colorScheme.onPrimary,
+                        ),
+                      )
+                    : Text(AppLocalizations.get('sendInquiryButton')),
               ),
             ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _sendRequest,
-          child: _isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Send Request'),
-        ),
-      ],
     );
   }
 }

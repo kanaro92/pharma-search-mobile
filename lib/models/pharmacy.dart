@@ -9,6 +9,7 @@ class Pharmacy {
   final String? email;
   final String? openingHours;
   final Map<String, dynamic>? statistics;
+  final bool isOpen;
 
   Pharmacy({
     required this.id,
@@ -21,6 +22,7 @@ class Pharmacy {
     this.email,
     this.openingHours,
     this.statistics,
+    required this.isOpen,
   });
 
   factory Pharmacy.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class Pharmacy {
       email: json['email'] as String?,
       openingHours: json['openingHours'] as String?,
       statistics: json['statistics'] as Map<String, dynamic>?,
+      isOpen: json['isOpen'] as bool? ?? false,
     );
   }
 
@@ -50,11 +53,12 @@ class Pharmacy {
       if (email != null) 'email': email,
       if (openingHours != null) 'openingHours': openingHours,
       if (statistics != null) 'statistics': statistics,
+      'isOpen': isOpen,
     };
   }
 
   @override
   String toString() {
-    return 'Pharmacy{id: $id, name: $name, address: $address, latitude: $latitude, longitude: $longitude, distance: $distance, phone: $phone, email: $email, openingHours: $openingHours, statistics: $statistics}';
+    return 'Pharmacy{id: $id, name: $name, address: $address, latitude: $latitude, longitude: $longitude, distance: $distance, phone: $phone, email: $email, openingHours: $openingHours, statistics: $statistics, isOpen: $isOpen}';
   }
 }

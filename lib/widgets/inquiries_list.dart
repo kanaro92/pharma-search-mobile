@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/medication_inquiry.dart';
 import '../utils/date_formatter.dart';
+import '../l10n/app_localizations.dart';
 
 class InquiriesList extends StatelessWidget {
   final List<MedicationInquiry> inquiries;
@@ -40,14 +41,14 @@ class InquiriesList extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'No Inquiries Yet',
+              AppLocalizations.get('noInquiriesTitle'),
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Search for medications and send inquiries\nto nearby pharmacies.',
+              AppLocalizations.get('noInquiriesMessage'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
@@ -66,6 +67,8 @@ class InquiriesList extends StatelessWidget {
         itemCount: inquiries.length,
         itemBuilder: (context, index) {
           final inquiry = inquiries[index];
+          final isPending = inquiry.status == 'PENDING';
+          
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Material(
@@ -125,9 +128,7 @@ class InquiriesList extends StatelessWidget {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: (inquiry.status == 'PENDING'
-                                        ? Colors.orange
-                                        : Colors.green)
+                                color: (isPending ? Colors.orange : Colors.green)
                                     .withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -135,21 +136,17 @@ class InquiriesList extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    inquiry.status == 'PENDING'
+                                    isPending
                                         ? Icons.pending_rounded
                                         : Icons.check_circle_rounded,
-                                    color: inquiry.status == 'PENDING'
-                                        ? Colors.orange
-                                        : Colors.green,
+                                    color: isPending ? Colors.orange : Colors.green,
                                     size: 16,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    inquiry.status,
+                                    AppLocalizations.get(isPending ? 'pending' : 'responded'),
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: inquiry.status == 'PENDING'
-                                          ? Colors.orange
-                                          : Colors.green,
+                                      color: isPending ? Colors.orange : Colors.green,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -216,7 +213,7 @@ class InquiriesList extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '${inquiry.messages!.length} ${inquiry.messages!.length == 1 ? 'response' : 'responses'}',
+                                '${inquiry.messages!.length} ${AppLocalizations.get(inquiry.messages!.length == 1 ? 'response' : 'responses')}',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurface.withOpacity(0.5),
                                 ),

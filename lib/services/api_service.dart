@@ -398,6 +398,10 @@ class ApiService {
     }
   }
 
+  Future<bool> sendMedicationInquiry(String medicationName, String note) async {
+    return createMedicationInquiry(medicationName, note);
+  }
+
   Future<List<MedicationInquiry>> getMyMedicationInquiries() async {
     await _initializeAuth();
     try {

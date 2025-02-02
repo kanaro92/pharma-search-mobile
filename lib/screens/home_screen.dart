@@ -279,6 +279,22 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openMaps(Pharmacy pharmacy) async {
+    final url = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=${pharmacy.latitude},${pharmacy.longitude}',
+    );
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    }
+  }
+
+  void _callPharmacy(Pharmacy pharmacy) async {
+    final url = Uri.parse('tel:${pharmacy.phone}');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return RoleGuard(
@@ -361,8 +377,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               final pharmacy = _pharmacies[index];
                               return PharmacyListItem(
                                 pharmacy: pharmacy,
-                                onRequestMedication: () => _showMedicationRequestDialog(pharmacy),
-                                currentPosition: _currentPosition,
+                                onTap: () => _showMedicationRequestDialog(pharmacy),
+                                onDirections: () => _openMaps(pharmacy),
+                                onCall: () => _callPharmacy(pharmacy),
                               );
                             },
                           ),
