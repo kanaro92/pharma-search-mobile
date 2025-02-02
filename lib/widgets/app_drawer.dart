@@ -82,7 +82,7 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('My Pharmacy'),
                   onTap: () {
                     Navigator.pop(context);
-                    // TODO: Navigate to pharmacy management
+                    Navigator.pushReplacementNamed(context, '/pharmacy-management');
                   },
                 ),
                 ListTile(

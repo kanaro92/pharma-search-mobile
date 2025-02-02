@@ -461,16 +461,49 @@ class ApiService {
   Future<List<MedicationInquiry>> getPharmacistInquiries() async {
     await _initializeAuth();
     try {
-      final response = await _dio.get('/medication-inquiries/pending');
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data;
-        return data.map((json) => MedicationInquiry.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to load pharmacist inquiries');
-      }
+      final response = await _dio.get('$baseUrl/pharmacist/inquiries');
+      return (response.data as List)
+          .map((json) => MedicationInquiry.fromJson(json))
+          .toList();
     } catch (e) {
-      throw Exception('Error getting pharmacist inquiries: $e');
+      print('Error getting pharmacist inquiries: $e');
+      rethrow;
+    }
+  }
+
+  Future<Pharmacy> getPharmacyData() async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.get('$baseUrl/pharmacist/pharmacy');
+      return Pharmacy.fromJson(response.data);
+    } catch (e) {
+      print('Error getting pharmacy data: $e');
+      rethrow;
+    }
+  }
+
+  Future<Pharmacy> updatePharmacyData(Map<String, dynamic> data) async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.put(
+        '$baseUrl/pharmacist/pharmacy',
+        data: data,
+      );
+      return Pharmacy.fromJson(response.data);
+    } catch (e) {
+      print('Error updating pharmacy data: $e');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getPharmacyStatistics() async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.get('$baseUrl/pharmacist/statistics');
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      print('Error getting pharmacy statistics: $e');
+      rethrow;
     }
   }
 

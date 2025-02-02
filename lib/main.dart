@@ -6,9 +6,10 @@ import 'screens/my_inquiries_screen.dart';
 import 'screens/medication_search_screen.dart';
 import 'screens/nearby_pharmacies_screen.dart';
 import 'screens/pharmacist_inquiries_screen.dart';
+import 'screens/pharmacy_management_screen.dart';
+import 'screens/profile_screen.dart';
 import 'services/api_service.dart';
 import 'providers/auth_provider.dart';
-import 'screens/profile_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +50,7 @@ class MyApp extends StatelessWidget {
           '/medication-search': (context) => MedicationSearchScreen(apiService: apiService),
           '/nearby-pharmacies': (context) => NearbyPharmaciesScreen(apiService: apiService),
           '/pharmacist-inquiries': (context) => PharmacistInquiriesScreen(apiService: apiService),
+          '/pharmacy-management': (context) => PharmacyManagementScreen(apiService: apiService),
           '/profile': (context) => const ProfileScreen(),
         },
       ),
