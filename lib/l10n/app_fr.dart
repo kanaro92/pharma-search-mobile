@@ -66,6 +66,19 @@ class AppLocaleFr {
     'yearAgo': 'il y a 1 an',
     'yearsAgo': 'il y a {count} ans',
 
+    // Pharmacist Inquiries
+    'medicationInquiries': 'Demandes de Médicaments',
+    'inquiryDetails': 'Détails de la Demande',
+    'respondToInquiry': 'Répondre à la demande',
+    'sendResponse': 'Envoyer la réponse',
+    'responseHint': 'Votre réponse...',
+    'inquiryResponseSent': 'Réponse envoyée avec succès',
+    'inquiryResponseError': 'Erreur lors de l\'envoi de la réponse',
+    'noInquiriesFound': 'Aucune demande trouvée',
+    'refreshInquiries': 'Actualiser les demandes',
+    'inquiryResponded': 'RÉPONDU',
+    'inquiryPending': 'EN ATTENTE',
+
     // Error Messages
     'errorLoadingInquiries': 'Erreur lors du chargement des demandes',
     'checkConnection': 'Veuillez vérifier votre connexion internet et réessayer.',

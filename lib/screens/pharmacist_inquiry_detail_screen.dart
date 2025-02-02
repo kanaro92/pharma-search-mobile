@@ -4,6 +4,7 @@ import '../models/medication_inquiry.dart';
 import '../models/message.dart';
 import '../services/user_service.dart';
 import '../utils/date_formatter.dart';
+import '../l10n/app_localizations.dart';
 
 class PharmacistInquiryDetailScreen extends StatefulWidget {
   final ApiService apiService;
@@ -25,6 +26,7 @@ class _PharmacistInquiryDetailScreenState extends State<PharmacistInquiryDetailS
   List<Message> _messages = [];
   bool _isLoading = false;
   String? _currentUserEmail;
+  bool _isSending = false;
 
   @override
   void initState() {
@@ -102,18 +104,59 @@ class _PharmacistInquiryDetailScreenState extends State<PharmacistInquiryDetailS
     }
   }
 
+  Future<void> _sendResponse() async {
+    if (_messageController.text.trim().isEmpty) return;
+
+    setState(() {
+      _isSending = true;
+    });
+
+    try {
+      await widget.apiService.respondToInquiry(
+        widget.inquiry.id,
+        _messageController.text.trim(),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.get('inquiryResponseSent')),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      _messageController.clear();
+      await _loadMessages();
+      
+      if (mounted) {
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.get('inquiryResponseError')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: const Text(
-          'Inquiry Details',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+        title: Text(
+          AppLocalizations.get('inquiryDetails'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: SafeArea(
@@ -332,7 +375,7 @@ class _PharmacistInquiryDetailScreenState extends State<PharmacistInquiryDetailS
                     child: TextField(
                       controller: _messageController,
                       decoration: InputDecoration(
-                        hintText: 'Type your message...',
+                        hintText: AppLocalizations.get('responseHint'),
                         filled: true,
                         fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.5),
                         border: OutlineInputBorder(
