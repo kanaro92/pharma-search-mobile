@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "581576107912",
+    "project_id": "my-cha-t-app-b2rdwj",
+    "storage_bucket": "my-cha-t-app-b2rdwj.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581576107912:android:6421f75f73ea61b0023c3d",
+        "android_client_info": {
+          "package_name": "com.mycompany.mychatapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBO_GqKTNO_mRjd2dguFHuUpfUshaaNJd8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581576107912:android:2c6b403f2a0c1984023c3d",
+        "android_client_info": {
+          "package_name": "com.pharmasearch.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBO_GqKTNO_mRjd2dguFHuUpfUshaaNJd8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

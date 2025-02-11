@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'screens/login_screen.dart';
 import 'screens/role_based_main_screen.dart';
 import 'screens/my_inquiries_screen.dart';
@@ -9,10 +10,13 @@ import 'screens/pharmacist_inquiries_screen.dart';
 import 'screens/pharmacy_management_screen.dart';
 import 'screens/profile_screen.dart';
 import 'services/api_service.dart';
+import 'services/notification_service.dart';
 import 'providers/auth_provider.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  await NotificationService().initialize();
   runApp(const MyApp());
 }
 

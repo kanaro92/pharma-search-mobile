@@ -28,7 +28,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.example.mobile_app"
+    namespace "com.pharmasearch.app"
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
@@ -46,8 +46,8 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.mobile_app"
-        minSdkVersion flutter.minSdkVersion
+        applicationId "com.pharmasearch.app"
+        minSdkVersion 21
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -59,15 +59,17 @@ android {
             signingConfig signingConfigs.debug
         }
     }
-}
 
-flutter {
-    source '../..'
-}
+    flutter {
+        source '../..'
+    }
 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.google.android.gms:play-services-maps:18.2.0'
-    implementation 'com.google.android.gms:play-services-location:21.0.1'
-    implementation 'com.android.support:multidex:1.0.3'
+    dependencies {
+        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+        implementation 'com.google.android.gms:play-services-maps:18.2.0'
+        implementation 'com.google.android.gms:play-services-location:21.0.1'
+        implementation 'com.android.support:multidex:1.0.3'
+    }
+
+    apply plugin: 'com.google.gms.google-services'
 }
