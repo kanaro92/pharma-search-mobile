@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
 import '../models/pharmacy.dart';
 import '../services/api_service.dart';
 import '../utils/role_guard.dart';
@@ -296,6 +297,36 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Widget _buildMap() {
+    if (_currentLocation == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.4,
+      child: GoogleMap(
+        mapType: MapType.normal,
+        initialCameraPosition: CameraPosition(
+          target: _currentLocation!,
+          zoom: 14.0,
+        ),
+        onMapCreated: (GoogleMapController controller) {
+          _mapController = controller;
+          if (_pharmacies.isNotEmpty) {
+            _updateMarkers();
+          }
+        },
+        markers: _markers,
+        myLocationEnabled: true,
+        myLocationButtonEnabled: true,
+        zoomControlsEnabled: true,
+        zoomGesturesEnabled: true,
+        liteModeEnabled: !kIsWeb && Platform.isAndroid, // Activer le mode lite uniquement sur Android natif
+        mapToolbarEnabled: false,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return RoleGuard(
@@ -389,30 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: Stack(
                       children: [
-                        if (_currentLocation != null) // Only show map when we have location
-                          GoogleMap(
-                            initialCameraPosition: CameraPosition(
-                              target: _currentLocation!,
-                              zoom: 15,
-                            ),
-                            markers: _markers,
-                            myLocationEnabled: true,
-                            myLocationButtonEnabled: true,
-                            zoomControlsEnabled: true,
-                            mapToolbarEnabled: true,
-                            onMapCreated: (GoogleMapController controller) {
-                              setState(() {
-                                _mapController = controller;
-                              });
-                              if (_pharmacies.isNotEmpty) {
-                                _updateMarkers();
-                              }
-                            },
-                          )
-                        else
-                          const Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                        _buildMap(),
                         if (_isLoading)
                           Container(
                             color: Colors.black.withOpacity(0.3),
