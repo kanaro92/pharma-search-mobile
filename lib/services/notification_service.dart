@@ -3,9 +3,20 @@ import 'package:flutter/material.dart';
 import 'dart:io' show Platform;
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:dio/dio.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Need to ensure Firebase is initialized here too
+  await Firebase.initializeApp();
+
+  print('Handling a background message:');
+  print('- Title: ${message.notification?.title}');
+  print('- Body: ${message.notification?.body}');
+  print('- Data: ${message.data}');
+}
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -48,31 +59,41 @@ class NotificationService {
       return;
     }
 
-    // Reset the registered token on initialization
-    _registeredToken = null;
-    _fcmToken = null;
+    try {
+      // Initialize Awesome Notifications
+      await AwesomeNotifications().initialize(
+        null, // no icon for now, can add one later
+        [
+          NotificationChannel(
+            channelKey: 'basic_channel',
+            channelName: 'Basic Notifications',
+            channelDescription: 'Notification channel for basic notifications',
+            defaultColor: const Color(0xFF6B8EB3),
+            ledColor: Colors.white,
+            importance: NotificationImportance.High,
+            playSound: true,
+            enableLights: true,
+            enableVibration: true,
+          ),
+        ],
+        debug: true,
+      );
 
-    await AwesomeNotifications().initialize(
-      null,
-      [
-        NotificationChannel(
-          channelKey: _channelKey,
-          channelName: 'Medication Notifications',
-          channelDescription: 'Notifications pour les demandes de médicaments',
-          defaultColor: _themeColor,
-          ledColor: _themeColor,
-          importance: NotificationImportance.High,
-          channelShowBadge: true,
-          enableLights: true,
-          enableVibration: true,
-          playSound: true,
-        )
-      ],
-    );
+      // Request notification permissions
+      final isAllowed = await AwesomeNotifications().isNotificationAllowed();
+      if (!isAllowed) {
+        print('Requesting notification permission...');
+        await AwesomeNotifications().requestPermissionToSendNotifications();
+      }
 
-    await requestPermission();
-    await setupNotificationListeners();
-    await setupFCMListeners();
+      // Set up Firebase
+      await setupFCMListeners();
+      
+      print('Notification service initialized successfully');
+    } catch (e) {
+      print('Error initializing notification service: $e');
+      print('Error details: ${e.toString()}');
+    }
   }
 
   Future<void> requestPermission() async {
@@ -92,16 +113,16 @@ class NotificationService {
     required String body,
     Map<String, String>? payload,
   }) async {
-    if (kIsWeb) {
-      print('Notifications are not supported on web platform');
-      return;
-    }
-    
     try {
+      print('Showing notification:');
+      print('- Title: $title');
+      print('- Body: $body');
+      print('- Payload: $payload');
+
       await AwesomeNotifications().createNotification(
         content: NotificationContent(
           id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
-          channelKey: _channelKey,
+          channelKey: 'basic_channel',
           title: title,
           body: body,
           payload: payload,
@@ -109,8 +130,10 @@ class NotificationService {
           category: NotificationCategory.Message,
         ),
       );
+      print('Notification created successfully');
     } catch (e) {
       print('Error showing notification: $e');
+      print('Error details: ${e.toString()}');
     }
   }
 
@@ -152,7 +175,17 @@ class NotificationService {
       }
 
       // Request permissions first
-      await _firebaseMessaging.requestPermission(
+      final settings = await _firebaseMessaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+      
+      print('User granted permission: ${settings.authorizationStatus}');
+
+      // Configure FCM to handle messages when app is in foreground
+      await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
         alert: true,
         badge: true,
         sound: true,
@@ -182,13 +215,47 @@ class NotificationService {
         }
       });
 
-      FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-      FirebaseMessaging.onMessageOpenedApp.listen(_handleBackgroundMessage);
+      // Handle foreground messages
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+        print('Received foreground message:');
+        print('- Title: ${message.notification?.title}');
+        print('- Body: ${message.notification?.body}');
+        print('- Data: ${message.data}');
+        
+        // Create a notification when in foreground
+        await showNotification(
+          title: message.notification?.title ?? 'Nouveau message',
+          body: message.notification?.body ?? '',
+          payload: message.data.map((key, value) => MapEntry(key, value.toString())),
+        );
+      });
+
+      // Handle background messages
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+      // Handle when user taps on notification when app is in background
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        print('User tapped on notification:');
+        print('- Title: ${message.notification?.title}');
+        print('- Body: ${message.notification?.body}');
+        print('- Data: ${message.data}');
+        _handleNotificationTap(message.data);
+      });
       
       print('FCM listeners setup completed');
     } catch (e) {
       print('Error setting up FCM listeners: $e');
+      print('Error details: ${e.toString()}');
     }
+  }
+
+  void _handleNotificationTap(Map<String, dynamic> data) {
+    // TODO: Implement navigation based on notification type
+    print('Handling notification tap with data: $data');
+    // Example:
+    // if (data['type'] == 'medication_search') {
+    //   // Navigate to medication search details
+    // }
   }
 
   Future<void> _registerFcmTokenWithBackend(String token) async {
@@ -230,24 +297,6 @@ class NotificationService {
   Future<String?> _getAuthToken() async {
     const storage = FlutterSecureStorage();
     return await storage.read(key: 'auth_token');
-  }
-
-  Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    print('Received foreground message: ${message.notification?.title}');
-    
-    // Convertir Map<String, dynamic> en Map<String, String>
-    final payload = message.data.map((key, value) => MapEntry(key, value.toString()));
-    
-    await showNotification(
-      title: message.notification?.title ?? 'Nouveau message',
-      body: message.notification?.body ?? '',
-      payload: payload,
-    );
-  }
-
-  void _handleBackgroundMessage(RemoteMessage message) {
-    print('Message reçu en arrière-plan: ${message.messageId}');
-    // La navigation sera gérée en fonction du payload
   }
 
   // Méthode de test pour simuler une notification de demande de médicament
@@ -297,5 +346,24 @@ class NotificationService {
       body: '$userName recherche du $medicationName à la pharmacie $pharmacyName',
       payload: payload,
     );
+  }
+
+  Future<void> testNotification() async {
+    print('Testing notification...');
+    try {
+      // Test FCM notification
+      print('Current FCM token: $_fcmToken');
+      
+      // Test local notification
+      await showNotification(
+        title: 'Test Notification',
+        body: 'This is a test notification from PharmaSearch',
+        payload: {'type': 'test'},
+      );
+      print('Local notification sent successfully');
+    } catch (e) {
+      print('Error sending test notification: $e');
+      print('Error details: ${e.toString()}');
+    }
   }
 }
