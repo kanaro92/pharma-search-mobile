@@ -18,6 +18,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('- Data: ${message.data}');
 }
 
+@pragma('vm:entry-point')
+Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
+  print('Notification action received: ${receivedAction.toMap().toString()}');
+  final NotificationService service = NotificationService();
+  service._handleNotificationTap(receivedAction.payload ?? {});
+}
+
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -27,7 +34,7 @@ class NotificationService {
   String? _fcmToken;
   String? _registeredToken;  // Track which token has been registered
   final Dio _dio = Dio();
-  
+
   String get _baseUrl {
     if (kIsWeb) {
       return 'http://localhost:8080/api';
@@ -50,8 +57,10 @@ class NotificationService {
     return url;
   }
 
-  static const String _channelKey = 'medication_channel';
+  static const String _channelKey = 'basic_channel';
   static const Color _themeColor = Color(0xFF6B8EB3);
+  final Set<String> _processedNotificationIds = {};  // Track processed notifications
+  bool _isShowingNotification = false;  // Add lock to prevent concurrent shows
 
   Future<void> initialize() async {
     if (kIsWeb) {
@@ -60,15 +69,15 @@ class NotificationService {
     }
 
     try {
-      // Initialize Awesome Notifications
+      // Initialize Awesome Notifications with a single channel
       await AwesomeNotifications().initialize(
-        null, // no icon for now, can add one later
+        null,
         [
           NotificationChannel(
-            channelKey: 'basic_channel',
+            channelKey: _channelKey,
             channelName: 'Basic Notifications',
-            channelDescription: 'Notification channel for basic notifications',
-            defaultColor: const Color(0xFF6B8EB3),
+            channelDescription: 'Notification channel for all notifications',
+            defaultColor: _themeColor,
             ledColor: Colors.white,
             importance: NotificationImportance.High,
             playSound: true,
@@ -79,20 +88,14 @@ class NotificationService {
         debug: true,
       );
 
-      // Request notification permissions
-      final isAllowed = await AwesomeNotifications().isNotificationAllowed();
-      if (!isAllowed) {
-        print('Requesting notification permission...');
-        await AwesomeNotifications().requestPermissionToSendNotifications();
-      }
+      // Register the global action receiver
+      await AwesomeNotifications().setListeners(
+        onActionReceivedMethod: onActionReceivedMethod,
+      );
 
-      // Set up Firebase
       await setupFCMListeners();
-      
-      print('Notification service initialized successfully');
     } catch (e) {
       print('Error initializing notification service: $e');
-      print('Error details: ${e.toString()}');
     }
   }
 
@@ -101,7 +104,7 @@ class NotificationService {
       print('Notifications are not supported on web platform');
       return;
     }
-    
+
     final isAllowed = await AwesomeNotifications().isNotificationAllowed();
     if (!isAllowed) {
       await AwesomeNotifications().requestPermissionToSendNotifications();
@@ -114,138 +117,123 @@ class NotificationService {
     Map<String, String>? payload,
   }) async {
     try {
+      // Use a lock to prevent concurrent notification shows
+      if (_isShowingNotification) {
+        print('Already showing a notification, skipping');
+        return;
+      }
+      _isShowingNotification = true;
+
+      final String notificationId = payload?['notification_id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
+      
+      // Check if this notification has already been processed
+      if (_processedNotificationIds.contains(notificationId)) {
+        print('Notification already processed, skipping: $notificationId');
+        _isShowingNotification = false;
+        return;
+      }
+
       print('Showing notification:');
+      print('- ID: $notificationId');
       print('- Title: $title');
       print('- Body: $body');
       print('- Payload: $payload');
 
+      // Generate a simple numeric ID for Awesome Notifications
+      final simpleId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+
       await AwesomeNotifications().createNotification(
         content: NotificationContent(
-          id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
-          channelKey: 'basic_channel',
+          id: simpleId,
+          channelKey: _channelKey,
           title: title,
           body: body,
-          payload: payload,
+          payload: {...?payload, 'notification_id': notificationId},
           notificationLayout: NotificationLayout.Default,
-          category: NotificationCategory.Message,
         ),
       );
+
+      // Add to processed notifications
+      _processedNotificationIds.add(notificationId);
+      
+      // Clean up old notification IDs (keep only last 100)
+      if (_processedNotificationIds.length > 100) {
+        _processedNotificationIds.remove(_processedNotificationIds.first);
+      }
+
       print('Notification created successfully');
     } catch (e) {
       print('Error showing notification: $e');
-      print('Error details: ${e.toString()}');
+    } finally {
+      _isShowingNotification = false;
     }
-  }
-
-  Future<void> setupNotificationListeners() async {
-    if (kIsWeb) return;
-
-    await AwesomeNotifications().setListeners(
-      onNotificationCreatedMethod: (receivedNotification) async {
-        print('Notification created: ${receivedNotification.title}');
-      },
-      onNotificationDisplayedMethod: (receivedNotification) async {
-        print('Notification displayed: ${receivedNotification.title}');
-      },
-      onActionReceivedMethod: (receivedAction) async {
-        print('Notification action received: ${receivedAction.title}');
-        // Gérer l'action de notification ici
-        if (receivedAction.payload != null) {
-          // Traiter les données du payload
-          print('Payload: ${receivedAction.payload}');
-        }
-      },
-      onDismissActionReceivedMethod: (receivedAction) async {
-        print('Notification dismissed: ${receivedAction.title}');
-      },
-    );
   }
 
   Future<void> setupFCMListeners() async {
-    if (kIsWeb) {
-      print('Notifications are not supported on web platform');
-      return;
-    }
+    if (kIsWeb) return;
 
     try {
       // Ensure Firebase is initialized
       if (Firebase.apps.isEmpty) {
-        print('Initializing Firebase...');
         await Firebase.initializeApp();
       }
 
-      // Request permissions first
+      // Request permissions
       final settings = await _firebaseMessaging.requestPermission(
         alert: true,
         badge: true,
         sound: true,
-        provisional: false,
       );
-      
       print('User granted permission: ${settings.authorizationStatus}');
 
-      // Configure FCM to handle messages when app is in foreground
+      // Completely disable FCM's native notifications
       await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-        alert: true,
-        badge: true,
-        sound: true,
+        alert: false,
+        badge: false,
+        sound: false,
       );
 
-      // Get the token
+      // Get and register FCM token
       _fcmToken = await _firebaseMessaging.getToken();
-      print('FCM Token: $_fcmToken');
-
       if (_fcmToken != null) {
-        print('Registering FCM token with backend...');
         await _registerFcmTokenWithBackend(_fcmToken!);
         _registeredToken = _fcmToken;
-      } else {
-        print('Failed to get FCM token');
       }
 
-      // Listen for token refresh
+      // Handle token refresh
       _firebaseMessaging.onTokenRefresh.listen((newToken) async {
-        print('FCM token refreshed: $newToken');
-        if (newToken != _fcmToken) {  // Only register if token actually changed
-          _fcmToken = newToken;
+        if (newToken != _registeredToken) {
           await _registerFcmTokenWithBackend(newToken);
           _registeredToken = newToken;
-        } else {
-          print('Token unchanged, skipping registration: $newToken');
         }
       });
 
-      // Handle foreground messages
+      // Handle foreground messages with debouncing
       FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-        print('Received foreground message:');
-        print('- Title: ${message.notification?.title}');
-        print('- Body: ${message.notification?.body}');
-        print('- Data: ${message.data}');
+        final String notificationId = message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString();
         
-        // Create a notification when in foreground
+        // Show notification with proper deduplication
         await showNotification(
           title: message.notification?.title ?? 'Nouveau message',
           body: message.notification?.body ?? '',
-          payload: message.data.map((key, value) => MapEntry(key, value.toString())),
+          payload: {
+            ...message.data,
+            'notification_id': notificationId,
+            'message_type': 'foreground'
+          },
         );
       });
 
       // Handle background messages
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-      // Handle when user taps on notification when app is in background
+      // Handle notification taps
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        print('User tapped on notification:');
-        print('- Title: ${message.notification?.title}');
-        print('- Body: ${message.notification?.body}');
-        print('- Data: ${message.data}');
         _handleNotificationTap(message.data);
       });
-      
-      print('FCM listeners setup completed');
+
     } catch (e) {
       print('Error setting up FCM listeners: $e');
-      print('Error details: ${e.toString()}');
     }
   }
 
@@ -276,7 +264,7 @@ class NotificationService {
           },
         ),
       );
-      
+
       if (response.statusCode == 200) {
         print('FCM token registered successfully with backend');
       } else {
@@ -297,30 +285,6 @@ class NotificationService {
   Future<String?> _getAuthToken() async {
     const storage = FlutterSecureStorage();
     return await storage.read(key: 'auth_token');
-  }
-
-  // Méthode de test pour simuler une notification de demande de médicament
-  Future<void> testMedicationRequest({
-    String medicationName = 'Paracétamol',
-    String userName = 'John Doe',
-  }) async {
-    if (kIsWeb) {
-      print('Notifications are not supported on web platform');
-      return;
-    }
-
-    final payload = {
-      'type': 'medication_request',
-      'medication': medicationName,
-      'user': userName,
-      'timestamp': DateTime.now().toIso8601String(),
-    };
-
-    await showNotification(
-      title: 'Nouvelle demande de médicament',
-      body: '$userName recherche du $medicationName',
-      payload: payload,
-    );
   }
 
   // Méthode pour envoyer une notification de demande de médicament réelle
@@ -346,24 +310,5 @@ class NotificationService {
       body: '$userName recherche du $medicationName à la pharmacie $pharmacyName',
       payload: payload,
     );
-  }
-
-  Future<void> testNotification() async {
-    print('Testing notification...');
-    try {
-      // Test FCM notification
-      print('Current FCM token: $_fcmToken');
-      
-      // Test local notification
-      await showNotification(
-        title: 'Test Notification',
-        body: 'This is a test notification from PharmaSearch',
-        payload: {'type': 'test'},
-      );
-      print('Local notification sent successfully');
-    } catch (e) {
-      print('Error sending test notification: $e');
-      print('Error details: ${e.toString()}');
-    }
   }
 }

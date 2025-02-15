@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/user_service.dart';
 import '../services/api_service.dart';
-import '../services/notification_service.dart';
 import 'home_screen.dart';
 import 'pharmacist_home_screen.dart';
 import 'pharmacist_inquiries_screen.dart';
@@ -61,14 +60,6 @@ class _RoleBasedMainScreenState extends State<RoleBasedMainScreen> {
     );
   }
 
-  Future<void> _testNotification() async {
-    final notificationService = NotificationService();
-    await notificationService.testMedicationRequest(
-      medicationName: 'Paracétamol',
-      userName: 'Test User',
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (!_checkedRole) {
@@ -85,19 +76,7 @@ class _RoleBasedMainScreenState extends State<RoleBasedMainScreen> {
     } else if (_userRole == 'PHARMACIST') {
       return PharmacistInquiriesScreen(apiService: widget.apiService);
     } else {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('PharmaSearch'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.notifications_none),
-              onPressed: _testNotification,
-              tooltip: 'Tester les notifications',
-            ),
-          ],
-        ),
-        body: HomeScreen(apiService: widget.apiService),
-      );
+      return HomeScreen(apiService: widget.apiService);
     }
   }
 }
