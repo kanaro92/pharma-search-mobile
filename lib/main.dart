@@ -35,6 +35,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
+        navigatorKey: NotificationService.navigatorKey,
         title: 'PharmaSearch',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(

@@ -6,29 +6,18 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
-
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Need to ensure Firebase is initialized here too
-  await Firebase.initializeApp();
-
-  print('Handling a background message:');
-  print('- Title: ${message.notification?.title}');
-  print('- Body: ${message.notification?.body}');
-  print('- Data: ${message.data}');
-}
-
-@pragma('vm:entry-point')
-Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
-  print('Notification action received: ${receivedAction.toMap().toString()}');
-  final NotificationService service = NotificationService();
-  service._handleNotificationTap(receivedAction.payload ?? {});
-}
+import '../screens/pharmacist_inquiry_detail_screen.dart';
+import '../models/medication_inquiry.dart';
+import '../models/message.dart';
+import '../services/api_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
+
+  // Global navigator key to use for navigation from anywhere
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   String? _fcmToken;
@@ -237,13 +226,47 @@ class NotificationService {
     }
   }
 
-  void _handleNotificationTap(Map<String, dynamic> data) {
-    // TODO: Implement navigation based on notification type
+  void _handleNotificationTap(Map<String, dynamic> data) async {
     print('Handling notification tap with data: $data');
-    // Example:
-    // if (data['type'] == 'medication_search') {
-    //   // Navigate to medication search details
-    // }
+    
+    if (data['type'] == 'medication_search') {
+      final requestId = int.parse(data['request_id']);
+      final apiService = ApiService();
+
+      try {
+        // Get the inquiry messages
+        final messages = await apiService.getMedicationInquiryMessages(requestId);
+        
+        // Create a MedicationInquiry object with the data from the notification
+        final inquiry = MedicationInquiry(
+          id: requestId,
+          medicationName: data['medication'],
+          patientNote: '',  // This will be updated when messages are loaded
+          status: 'PENDING',  // Default status
+          createdAt: DateTime.now(),
+          user: {
+            'id': int.parse(data['user_id']),
+            'name': data['user_name'],
+          },
+          messages: messages,
+        );
+        
+        final context = NotificationService.navigatorKey.currentContext;
+        if (context != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PharmacistInquiryDetailScreen(
+                apiService: apiService,
+                inquiry: inquiry,
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        print('Error handling notification tap: $e');
+      }
+    }
   }
 
   Future<void> _registerFcmTokenWithBackend(String token) async {
@@ -311,4 +334,22 @@ class NotificationService {
       payload: payload,
     );
   }
+}
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Need to ensure Firebase is initialized here too
+  await Firebase.initializeApp();
+
+  print('Handling a background message:');
+  print('- Title: ${message.notification?.title}');
+  print('- Body: ${message.notification?.body}');
+  print('- Data: ${message.data}');
+}
+
+@pragma('vm:entry-point')
+Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
+  print('Notification action received: ${receivedAction.toMap().toString()}');
+  final NotificationService service = NotificationService();
+  service._handleNotificationTap(receivedAction.payload ?? {});
 }
