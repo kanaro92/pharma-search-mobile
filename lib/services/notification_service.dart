@@ -114,7 +114,7 @@ class NotificationService {
       _isShowingNotification = true;
 
       final String notificationId = payload?['notification_id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
-      
+
       // Check if this notification has already been processed
       if (_processedNotificationIds.contains(notificationId)) {
         print('Notification already processed, skipping: $notificationId');
@@ -144,7 +144,7 @@ class NotificationService {
 
       // Add to processed notifications
       _processedNotificationIds.add(notificationId);
-      
+
       // Clean up old notification IDs (keep only last 100)
       if (_processedNotificationIds.length > 100) {
         _processedNotificationIds.remove(_processedNotificationIds.first);
@@ -200,7 +200,7 @@ class NotificationService {
       // Handle foreground messages with debouncing
       FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
         final String notificationId = message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString();
-        
+
         // Show notification with proper deduplication
         await showNotification(
           title: message.notification?.title ?? 'Nouveau message',
@@ -228,29 +228,29 @@ class NotificationService {
 
   void _handleNotificationTap(Map<String, dynamic> data) async {
     print('Handling notification tap with data: $data');
-    
+
     if (data['type'] == 'medication_search') {
       final requestId = int.parse(data['request_id']);
       final apiService = ApiService();
 
       try {
         // Get the inquiry messages
-        final messages = await apiService.getMedicationInquiryMessages(requestId);
-        
+        //final messages = await apiService.getMedicationInquiryMessages(requestId);
+
         // Create a MedicationInquiry object with the data from the notification
         final inquiry = MedicationInquiry(
           id: requestId,
-          medicationName: data['medication'],
-          patientNote: '',  // This will be updated when messages are loaded
+          medicationName: data['medication_name'],
+          patientNote: data['patient_note'],  // This will be updated when messages are loaded
           status: 'PENDING',  // Default status
           createdAt: DateTime.now(),
           user: {
             'id': int.parse(data['user_id']),
             'name': data['user_name'],
           },
-          messages: messages,
+         // messages: messages,
         );
-        
+
         final context = NotificationService.navigatorKey.currentContext;
         if (context != null) {
           Navigator.push(
