@@ -146,12 +146,7 @@ class NotificationService {
     if (kIsWeb) return;
 
     try {
-      // Ensure Firebase is initialized
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp();
-      }
-
-      // Request permissions
+      // Request permissions first
       final settings = await _firebaseMessaging.requestPermission(
         alert: true,
         badge: true,
@@ -166,26 +161,23 @@ class NotificationService {
         sound: false,
       );
 
-      // Get and register FCM token
+      // Get FCM token but don't register yet if not authenticated
       _fcmToken = await _firebaseMessaging.getToken();
-      if (_fcmToken != null) {
-        await _registerFcmTokenWithBackend(_fcmToken!);
-        _registeredToken = _fcmToken;
-      }
+      print('Got FCM token: $_fcmToken');
 
       // Handle token refresh
       _firebaseMessaging.onTokenRefresh.listen((newToken) async {
-        if (newToken != _registeredToken) {
+        _fcmToken = newToken;
+        final authToken = await _getAuthToken();
+        if (authToken != null) {
           await _registerFcmTokenWithBackend(newToken);
           _registeredToken = newToken;
         }
       });
 
-      // Handle foreground messages with debouncing
+      // Handle foreground messages
       FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
         final String notificationId = message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString();
-
-        // Show notification with proper deduplication
         await showNotification(
           title: message.notification?.title ?? 'Nouveau message',
           body: message.notification?.body ?? '',
@@ -200,43 +192,78 @@ class NotificationService {
       // Handle background messages
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-      // Handle notification taps
-      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        _handleNotificationTap(message.data);
-      });
-
     } catch (e) {
       print('Error setting up FCM listeners: $e');
     }
   }
 
-  void _handleNotificationTap(Map<String, dynamic> data) async {
+  // New method to register FCM token after successful login
+  Future<void> registerFCMTokenAfterLogin() async {
+    if (_fcmToken != null) {
+      try {
+        await _registerFcmTokenWithBackend(_fcmToken!);
+        _registeredToken = _fcmToken;
+        print('Successfully registered FCM token after login');
+      } catch (e) {
+        print('Error registering FCM token after login: $e');
+      }
+    }
+  }
+
+  Future<void> _handleNotificationTap(Map<String, dynamic> data) async {
     print('Handling notification tap with data: $data');
 
-    if (data['type'] == 'medication_search') {
-      final requestId = int.parse(data['request_id']);
-      final apiService = ApiService();
-
+    // Handle both medication_search and medication_request types
+    if (data['type'] == 'medication_search' || data['type'] == 'medication_request') {
       try {
-        // Get the inquiry messages
-        //final messages = await apiService.getMedicationInquiryMessages(requestId);
+        // Safely parse the request_id
+        final requestId = int.tryParse(data['request_id']?.toString() ?? '') ?? -1;
+        if (requestId == -1) {
+          print('Invalid request_id received: ${data['request_id']}');
+          return;
+        }
+
+        // Handle both user_id formats
+        var userId = -1;
+        if (data['user_id'] != null) {
+          userId = int.tryParse(data['user_id'].toString()) ?? -1;
+        } else if (data['user'] != null) {
+          // Try to extract user ID from the user field if available
+          final userIdStr = data['user'].toString().split(':').first.trim();
+          userId = int.tryParse(userIdStr) ?? -1;
+        }
+
+        if (userId == -1) {
+          print('Invalid user_id received: ${data['user_id'] ?? data['user']}');
+          return;
+        }
+
+        final apiService = ApiService();
+
+        // Get the medication name from either format
+        final medicationName = data['medication_name'] ?? 'Unknown Medication';
+
+        // Get the user name from either format
+        final userName = data['user_name'] ??
+                        data['user']?.toString().split(':').last.trim() ??
+                        'Unknown User';
 
         // Create a MedicationInquiry object with the data from the notification
         final inquiry = MedicationInquiry(
           id: requestId,
-          medicationName: data['medication_name'],
-          patientNote: data['patient_note'],  // This will be updated when messages are loaded
-          status: 'PENDING',  // Default status
+          medicationName: medicationName,
+          patientNote: data['patient_note'] ?? '',
+          status: 'PENDING',
           createdAt: DateTime.now(),
           user: {
-            'id': int.parse(data['user_id']),
-            'name': data['user_name'],
+            'id': userId,
+            'name': userName,
           },
-         // messages: messages,
         );
 
         final context = NotificationService.navigatorKey.currentContext;
         if (context != null) {
+          print('Navigating to inquiry detail screen for medication: $medicationName');
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -246,10 +273,15 @@ class NotificationService {
               ),
             ),
           );
+        } else {
+          print('No valid context found for navigation');
         }
-      } catch (e) {
+      } catch (e, stackTrace) {
         print('Error handling notification tap: $e');
+        print('Stack trace: $stackTrace');
       }
+    } else {
+      print('Unknown notification type: ${data['type']}');
     }
   }
 

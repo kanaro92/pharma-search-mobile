@@ -40,6 +40,8 @@ class AuthProvider with ChangeNotifier {
           await _notificationService.setupFCMListeners();
           print('Notifications setup completed');
         }
+        // Register FCM token after successful login
+        await _notificationService.registerFCMTokenAfterLogin();
         notifyListeners();
       }
       return success;
