@@ -192,6 +192,11 @@ class NotificationService {
       // Handle background messages
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
+      // Handle notification taps
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        _handleNotificationTap(message.data);
+      });
+
     } catch (e) {
       print('Error setting up FCM listeners: $e');
     }
