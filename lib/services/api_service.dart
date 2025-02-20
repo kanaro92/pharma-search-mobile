@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import '../models/pharmacy.dart';
 import '../models/message.dart';
 import '../models/medication_request.dart';
@@ -13,26 +14,58 @@ import '../models/conversation.dart';
 import 'user_service.dart';
 
 class ApiService {
-  static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:8080/api';
-    }
-    // For Android emulator, use 10.0.2.2 instead of localhost
+  static final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
+  static Future<bool> get _isEmulator async {
     if (Platform.isAndroid) {
-      final url = 'http://10.0.2.2:8080/api';
-      print('Running on Android, using URL: $url');
+      final androidInfo = await _deviceInfo.androidInfo;
+      return !androidInfo.isPhysicalDevice;
+    }
+    return false;
+  }
+
+  static String? _cachedBaseUrl;
+  
+  static Future<String> getBaseUrl() async {
+    if (_cachedBaseUrl != null) return _cachedBaseUrl!;
+    
+    if (kIsWeb) {
+      _cachedBaseUrl = 'http://localhost:8080/api';
+      return _cachedBaseUrl!;
+    }
+    
+    // For Android devices
+    if (Platform.isAndroid) {
+      final isEmulator = await _isEmulator;
+      final url = isEmulator 
+          ? 'http://10.0.2.2:8080/api'
+          : 'http://192.168.1.27:8080/api';
+      print('Running on Android ${isEmulator ? "emulator" : "physical device"}, using URL: $url');
+      _cachedBaseUrl = url;
       return url;
     }
-    // For iOS simulator, use localhost
+    
+    // For iOS devices
     if (Platform.isIOS) {
-      final url = 'http://localhost:8080/api';
+      final url = 'http://192.168.1.27:8080/api';
       print('Running on iOS, using URL: $url');
+      _cachedBaseUrl = url;
       return url;
     }
-    // For physical devices, use your computer's IP address
-    final url = 'http://192.168.1.27:8080/api';
-    print('Running on physical device, using URL: $url');
-    return url;
+    
+    // Default fallback
+    _cachedBaseUrl = 'http://192.168.1.27:8080/api';
+    print('Running on device, using URL: $_cachedBaseUrl');
+    return _cachedBaseUrl!;
+  }
+
+  // Temporary getter for backward compatibility
+  static String get baseUrl {
+    if (_cachedBaseUrl == null) {
+      // Initialize with a default value
+      print('Warning: baseUrl accessed before initialization, using default URL');
+      return 'http://192.168.1.27:8080/api';
+    }
+    return _cachedBaseUrl!;
   }
 
   final Dio _dio;
@@ -43,9 +76,9 @@ class ApiService {
   ApiService()
       : _storage = const FlutterSecureStorage(),
         _dio = Dio(BaseOptions(
-          connectTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
-          sendTimeout: const Duration(seconds: 30),
+          connectTimeout: const Duration(seconds: 60),
+          receiveTimeout: const Duration(seconds: 60),
+          sendTimeout: const Duration(seconds: 60),
           contentType: 'application/json',
         )) {
     print('Initializing ApiService with base URL: ${baseUrl}');

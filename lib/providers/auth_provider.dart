@@ -22,7 +22,7 @@ class AuthProvider with ChangeNotifier {
     _token = await _storage.read(key: 'auth_token');
     _isAuthenticated = _token != null;
     if (_isAuthenticated) {
-      // Re-initialize notifications if we're already logged in
+      // Only setup FCM listeners if already authenticated
       await _notificationService.setupFCMListeners();
     }
     notifyListeners();
@@ -33,11 +33,13 @@ class AuthProvider with ChangeNotifier {
       final success = await _apiService.login(email, password);
       if (success) {
         _isAuthenticated = true;
-        // Initialize notifications after successful login
-        print('Login successful, setting up notifications...');
-        await _notificationService.initialize();  // Initialize first
-        await _notificationService.setupFCMListeners();  // Then setup FCM
-        print('Notifications setup completed');
+        // Initialize notifications only once after successful login
+        if (!_notificationService.isInitialized) {
+          print('Login successful, setting up notifications...');
+          await _notificationService.initialize();
+          await _notificationService.setupFCMListeners();
+          print('Notifications setup completed');
+        }
         notifyListeners();
       }
       return success;

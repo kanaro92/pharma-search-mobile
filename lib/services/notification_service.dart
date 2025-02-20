@@ -24,34 +24,17 @@ class NotificationService {
   String? _registeredToken;  // Track which token has been registered
   final Dio _dio = Dio();
 
-  String get _baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:8080/api';
-    }
-    // For Android emulator, use 10.0.2.2 instead of localhost
-    if (Platform.isAndroid) {
-      final url = 'http://10.0.2.2:8080/api';
-      print('Running on Android, using URL: $url');
-      return url;
-    }
-    // For iOS simulator, use localhost
-    if (Platform.isIOS) {
-      final url = 'http://localhost:8080/api';
-      print('Running on iOS, using URL: $url');
-      return url;
-    }
-    // For physical devices, use your computer's IP address
-    final url = 'http://192.168.1.27:8080/api';
-    print('Running on physical device, using URL: $url');
-    return url;
-  }
+  String get _baseUrl => ApiService.baseUrl;
 
   static const String _channelKey = 'basic_channel';
   static const Color _themeColor = Color(0xFF6B8EB3);
   final Set<String> _processedNotificationIds = {};  // Track processed notifications
   bool _isShowingNotification = false;  // Add lock to prevent concurrent shows
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
 
   Future<void> initialize() async {
+    if (_isInitialized) return;
     if (kIsWeb) {
       print('Notifications are not supported on web platform');
       return;
@@ -64,8 +47,8 @@ class NotificationService {
         [
           NotificationChannel(
             channelKey: _channelKey,
-            channelName: 'Basic Notifications',
-            channelDescription: 'Notification channel for all notifications',
+            channelName: 'Basic notifications',
+            channelDescription: 'Notification channel for basic notifications',
             defaultColor: _themeColor,
             ledColor: Colors.white,
             importance: NotificationImportance.High,
@@ -83,6 +66,7 @@ class NotificationService {
       );
 
       await setupFCMListeners();
+      _isInitialized = true;
     } catch (e) {
       print('Error initializing notification service: $e');
     }

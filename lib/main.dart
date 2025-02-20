@@ -17,6 +17,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await NotificationService().initialize();
+  
+  // Initialize API base URL
+  await ApiService.getBaseUrl();
+  
   runApp(const MyApp());
 }
 
