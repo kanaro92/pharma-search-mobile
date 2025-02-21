@@ -195,27 +195,27 @@ class InquiriesList extends StatelessWidget {
                             Icon(
                               Icons.access_time_rounded,
                               size: 16,
-                              color: theme.colorScheme.onSurface.withOpacity(0.5),
+                              color: theme.colorScheme.onSurface.withOpacity(0.6),
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: 8),
                             Text(
                               DateFormatter.formatTimeAgo(inquiry.createdAt),
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                color: theme.colorScheme.onSurface.withOpacity(0.6),
                               ),
                             ),
-                            if (inquiry.messages != null && inquiry.messages!.isNotEmpty) ...[
-                              const SizedBox(width: 16),
+                            const Spacer(),
+                            if (!isPending && inquiry.respondingPharmacies != null) ...[
                               Icon(
-                                Icons.chat_rounded,
+                                Icons.local_pharmacy_rounded,
                                 size: 16,
-                                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                color: theme.colorScheme.onSurface.withOpacity(0.6),
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 8),
                               Text(
-                                '${inquiry.messages!.length} ${AppLocalizations.get(inquiry.messages!.length == 1 ? 'response' : 'responses')}',
+                                '${inquiry.respondingPharmacies?.length ?? 0} ${AppLocalizations.get('pharmaciesResponded')}',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                  color: theme.colorScheme.onSurface.withOpacity(0.6),
                                 ),
                               ),
                             ],
