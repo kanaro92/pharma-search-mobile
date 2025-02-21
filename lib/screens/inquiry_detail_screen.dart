@@ -105,40 +105,21 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF6B8EB3),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Inquiry Details',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
-        ),
+      body: SafeArea(
         child: Column(
           children: [
             // Inquiry Details Card
             Container(
-              margin: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -146,211 +127,231 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
                     blurRadius: 10,
-                    offset: const Offset(0, 2),
+                    offset: const Offset(0, 4),
                   ),
                 ],
-                border: Border.all(
-                  color: Colors.grey.shade200,
-                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.medical_services_outlined,
-                        color: Color(0xFF6B8EB3),
-                        size: 24,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          widget.inquiry.medicationName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF6B8EB3),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.notes_outlined,
-                        color: Colors.grey[600],
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          widget.inquiry.patientNote,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: widget.inquiry.status == 'PENDING'
-                          ? Colors.orange.withOpacity(0.2)
-                          : Colors.green.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      widget.inquiry.status,
-                      style: TextStyle(
-                        color: widget.inquiry.status == 'PENDING'
-                            ? Colors.orange
-                            : Colors.green,
-                        fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
                       ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.medication_rounded,
+                            color: theme.colorScheme.primary,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.inquiry.medicationName,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                DateFormatter.formatDate(widget.inquiry.createdAt),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: (widget.inquiry.status == 'PENDING'
+                                    ? Colors.orange
+                                    : Colors.green)
+                                .withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            widget.inquiry.status,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: widget.inquiry.status == 'PENDING'
+                                  ? Colors.orange
+                                  : Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            // Responding Pharmacies Section
-            if (widget.inquiry.respondingPharmacies != null &&
-                widget.inquiry.respondingPharmacies!.isNotEmpty)
-              Container(
-                margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Responding Pharmacies',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF6B8EB3),
+                  if (widget.inquiry.patientNote.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.notes_rounded,
+                              size: 16,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                widget.inquiry.patientNote,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: widget.inquiry.respondingPharmacies!
-                          .map((pharmacy) => Container(
+                  if (widget.inquiry.respondingPharmacies?.isNotEmpty ?? false)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Responding Pharmacies',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: widget.inquiry.respondingPharmacies!.map((pharmacy) {
+                              return Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[200],
+                                  color: theme.colorScheme.surfaceVariant,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
                                   pharmacy.name,
-                                  style: TextStyle(
-                                    color: Colors.grey[800],
-                                    fontWeight: FontWeight.w500,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
-                              ))
-                          .toList(),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                ],
               ),
+            ),
             // Messages List
             Expanded(
               child: _isLoading && _messages.isEmpty
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        color: const Color(0xFF6B8EB3),
-                      ),
-                    )
+                  ? const Center(child: CircularProgressIndicator())
                   : ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       itemCount: _messages.length,
                       itemBuilder: (context, index) {
                         final message = _messages[index];
-                        final isCurrentUser =
-                            _currentUserEmail != null && message.isCurrentUser(_currentUserEmail!);
+                        final isCurrentUser = message.isCurrentUser(_currentUserEmail ?? '');
 
-                        return Align(
-                          alignment: isCurrentUser
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isCurrentUser
-                                  ? const Color(0xFF6B8EB3)
-                                  : Colors.grey[100],
-                              borderRadius: BorderRadius.only(
-                                topLeft: const Radius.circular(16),
-                                topRight: const Radius.circular(16),
-                                bottomLeft: Radius.circular(isCurrentUser ? 16 : 4),
-                                bottomRight: Radius.circular(isCurrentUser ? 4 : 16),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 2),
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            mainAxisAlignment: isCurrentUser
+                                ? MainAxisAlignment.end
+                                : MainAxisAlignment.start,
+                            children: [
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: MediaQuery.of(context).size.width * 0.75,
                                 ),
-                              ],
-                            ),
-                            constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width * 0.75,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: isCurrentUser
-                                  ? CrossAxisAlignment.end
-                                  : CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  message.content,
-                                  style: TextStyle(
-                                    color: isCurrentUser ? Colors.white : Colors.black87,
-                                    fontSize: 16,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isCurrentUser
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.surfaceVariant,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(isCurrentUser ? 16 : 4),
+                                      topRight: Radius.circular(isCurrentUser ? 4 : 16),
+                                      bottomLeft: const Radius.circular(16),
+                                      bottomRight: const Radius.circular(16),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        message.content,
+                                        style: theme.textTheme.bodyLarge?.copyWith(
+                                          color: isCurrentUser
+                                              ? Colors.white
+                                              : theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            message.getSenderName(),
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                              color: isCurrentUser
+                                                  ? Colors.white.withOpacity(0.9)
+                                                  : theme.colorScheme.onSurfaceVariant,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          Text(
+                                            ' • ${DateFormatter.formatDateTime(message.createdAt)}',
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                              color: isCurrentUser
+                                                  ? Colors.white.withOpacity(0.7)
+                                                  : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      message.getSenderName(),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: isCurrentUser
-                                            ? Colors.white.withOpacity(0.9)
-                                            : Colors.grey[800],
-                                      ),
-                                    ),
-                                    Text(
-                                      ' • ${DateFormatter.formatDateTime(message.createdAt)}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: isCurrentUser
-                                            ? Colors.white.withOpacity(0.7)
-                                            : Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         );
                       },
@@ -377,10 +378,10 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
                       decoration: InputDecoration(
                         hintText: 'Type your message...',
                         hintStyle: TextStyle(
-                          color: Colors.grey[500],
+                          color: theme.colorScheme.onSurface.withOpacity(0.5),
                         ),
                         filled: true,
-                        fillColor: Colors.grey[100],
+                        fillColor: theme.colorScheme.surfaceVariant,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
@@ -397,7 +398,7 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
                   const SizedBox(width: 12),
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6B8EB3),
+                      color: theme.colorScheme.primary,
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: IconButton(
