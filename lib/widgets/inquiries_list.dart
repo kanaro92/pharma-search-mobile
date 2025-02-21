@@ -73,6 +73,8 @@ class InquiriesList extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 12),
             child: Material(
               color: Colors.white,
+              elevation: 1,
+              shadowColor: Colors.black.withOpacity(0.05),
               borderRadius: BorderRadius.circular(16),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
@@ -80,7 +82,8 @@ class InquiriesList extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                      width: 0.5,
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -93,10 +96,12 @@ class InquiriesList extends StatelessWidget {
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            topRight: Radius.circular(16),
+                          color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+                          border: Border(
+                            bottom: BorderSide(
+                              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                              width: 0.5,
+                            ),
                           ),
                         ),
                         child: Row(
@@ -162,8 +167,12 @@ class InquiriesList extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                              color: theme.colorScheme.primary.withOpacity(0.05),
                               borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: theme.colorScheme.primary.withOpacity(0.1),
+                                width: 0.5,
+                              ),
                             ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,33 +201,48 @@ class InquiriesList extends StatelessWidget {
                         padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.access_time_rounded,
-                              size: 16,
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              DateFormatter.formatTimeAgo(inquiry.createdAt),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
-                              ),
-                            ),
-                            const Spacer(),
-                            if (!isPending && inquiry.respondingPharmacies != null) ...[
-                              Icon(
-                                Icons.local_pharmacy_rounded,
-                                size: 16,
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${inquiry.respondingPharmacies?.length ?? 0} ${AppLocalizations.get('pharmaciesResponded')}',
-                                style: theme.textTheme.bodySmall?.copyWith(
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.access_time_rounded,
+                                  size: 16,
                                   color: theme.colorScheme.onSurface.withOpacity(0.6),
                                 ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  DateFormatter.formatTimeAgo(inquiry.createdAt),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 24),
+                            if (!isPending && inquiry.respondingPharmacies != null) 
+                              Flexible(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.local_pharmacy_rounded,
+                                      size: 16,
+                                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        '${inquiry.respondingPharmacies?.length ?? 0} ${AppLocalizations.get('pharmaciesResponded')}',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
                           ],
                         ),
                       ),

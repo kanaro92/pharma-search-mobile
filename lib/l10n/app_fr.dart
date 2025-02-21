@@ -98,7 +98,7 @@ class AppLocaleFr {
     'pharmacyPending': 'En Attente',
     'pharmacyResolved': 'Résolu',
     'editPharmacyDetails': 'Modifier les Détails',
-    'pharmaciesResponded': 'Pharmacies ayant répondu',
+    'pharmaciesResponded': 'Pharmacies ayant répondu tes tes tests tes',
 
     // Profile Screen
     'profileTitle': 'Profil',

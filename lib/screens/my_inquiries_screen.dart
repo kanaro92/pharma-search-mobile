@@ -69,8 +69,10 @@ class _MyInquiriesScreenState extends State<MyInquiriesScreen> {
     return RoleGuard(
       requiredRole: 'USER',
       child: Scaffold(
-        backgroundColor: theme.colorScheme.surface,
+        backgroundColor: theme.colorScheme.surface.withOpacity(0.95),
         appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.white,
           title: Text(
             AppLocalizations.get('myInquiries'),
             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -87,9 +89,9 @@ class _MyInquiriesScreenState extends State<MyInquiriesScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
