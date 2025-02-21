@@ -119,6 +119,7 @@ class _MyInquiriesScreenState extends State<MyInquiriesScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 12),
               // Inquiries List
               Expanded(
                 child: InquiriesList(
