@@ -11,6 +11,7 @@ import '../models/medication_request.dart';
 import '../models/medication_inquiry.dart';
 import '../models/chat_message.dart';
 import '../models/conversation.dart';
+import '../models/pharmacy_conversation.dart';
 import 'user_service.dart';
 
 class ApiService {
@@ -409,7 +410,7 @@ class ApiService {
     await _initializeAuth();
     try {
       final response = await _dio.post(
-        '/medication-inquiries',
+        '/inquiries',
         data: {
           'medicationName': medicationName,
           'patientNote': note,
@@ -438,7 +439,7 @@ class ApiService {
   Future<List<MedicationInquiry>> getMyMedicationInquiries() async {
     await _initializeAuth();
     try {
-      final response = await _dio.get('/medication-inquiries/my');
+      final response = await _dio.get('/inquiries/my');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
@@ -463,8 +464,8 @@ class ApiService {
   Future<List<Message>> getMedicationInquiryMessages(int inquiryId) async {
     await _initializeAuth();
     try {
-      print('Fetching messages for inquiry $inquiryId from ${_dio.options.baseUrl}/medication-inquiries/$inquiryId/messages');
-      final response = await _dio.get('/medication-inquiries/$inquiryId/messages');
+      print('Fetching messages for inquiry $inquiryId');
+      final response = await _dio.get('/inquiries/$inquiryId/messages');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
@@ -490,7 +491,7 @@ class ApiService {
     await _initializeAuth();
     try {
       final response = await _dio.post(
-        '/medication-inquiries/$inquiryId/messages',
+        '/inquiries/$inquiryId/messages',
         data: {'content': content},
       );
 
@@ -525,13 +526,12 @@ class ApiService {
   Future<List<MedicationInquiry>> getPharmacistInquiries() async {
     await _initializeAuth();
     try {
-      final response = await _dio.get('/pharmacist/inquiries');
+      final response = await _dio.get('/inquiries/pharmacist');
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data as List<dynamic>;
+        final List<dynamic> data = response.data;
         return data.map((json) => MedicationInquiry.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to fetch pharmacist inquiries');
       }
+      throw Exception('Failed to load pharmacist inquiries');
     } catch (e) {
       print('Error fetching pharmacist inquiries: $e');
       rethrow;
@@ -541,7 +541,7 @@ class ApiService {
   Future<MedicationInquiry> respondToInquiry(int inquiryId) async {
     await _initializeAuth();
     try {
-      final response = await _dio.post('/medication-inquiries/$inquiryId/respond');
+      final response = await _dio.post('/inquiries/$inquiryId/respond');
       if (response.statusCode == 200) {
         return MedicationInquiry.fromJson(response.data);
       } else {
@@ -559,7 +559,7 @@ class ApiService {
       final body = {
         'content': response,
       };
-      await _dio.post('/medication-inquiries/$inquiryId/messages', data: body);
+      await _dio.post('/inquiries/$inquiryId/messages', data: body);
     } catch (e) {
       print('Error sending inquiry response: $e');
       rethrow;
@@ -569,7 +569,7 @@ class ApiService {
   Future<MedicationInquiry> withdrawFromInquiry(int inquiryId) async {
     await _initializeAuth();
     try {
-      final response = await _dio.post('/medication-inquiries/$inquiryId/withdraw');
+      final response = await _dio.delete('/inquiries/$inquiryId/respond');
       if (response.statusCode == 200) {
         return MedicationInquiry.fromJson(response.data);
       } else {
@@ -701,6 +701,56 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Error sending message: $e');
+    }
+  }
+
+  // Inquiry Conversation methods
+  Future<List<PharmacyConversation>> getInquiryConversations(int inquiryId) async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.get('/inquiries/$inquiryId/conversations');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => PharmacyConversation.fromJson(json)).toList();
+      }
+      throw Exception('Failed to load conversations');
+    } catch (e) {
+      print('Error loading conversations: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Message>> getInquiryMessages(int inquiryId, int pharmacyId) async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.get('/inquiries/$inquiryId/conversations/$pharmacyId');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Message.fromJson(json)).toList();
+      }
+      throw Exception('Failed to load messages');
+    } catch (e) {
+      print('Error loading messages: $e');
+      rethrow;
+    }
+  }
+
+  Future<Message> sendPharmacyMessage(int inquiryId, int pharmacyId, String content) async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.post(
+        '/inquiries/$inquiryId/conversations/$pharmacyId/messages',
+        data: {
+          'content': content,
+        },
+      );
+      if (response.statusCode == 201) {
+        return Message.fromJson(response.data);
+      }
+      throw Exception('Failed to send message');
+    } catch (e) {
+      print('Error sending message: $e');
+      rethrow;
     }
   }
 }

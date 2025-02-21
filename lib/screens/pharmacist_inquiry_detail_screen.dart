@@ -60,13 +60,17 @@ class _PharmacistInquiryDetailScreenState extends State<PharmacistInquiryDetailS
     });
 
     try {
-      final messages = await widget.apiService.getMedicationInquiryMessages(widget.inquiry.id);
+      final currentUser = await UserService().getCurrentUser();
+      final messages = await widget.apiService.getInquiryMessages(
+        widget.inquiry.id,
+        currentUser?['id'] ?? 0,
+      );
       setState(() {
         _messages = messages;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading messages: $e')),
+        SnackBar(content: Text('Failed to load messages: $e')),
       );
     } finally {
       setState(() {

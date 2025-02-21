@@ -5,7 +5,7 @@ import '../models/medication_inquiry.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/inquiries_list.dart';
 import '../l10n/app_localizations.dart';
-import './inquiry_detail_screen.dart';
+import './inquiry_conversations_screen.dart';
 
 class MyInquiriesScreen extends StatefulWidget {
   final ApiService apiService;
@@ -54,12 +54,12 @@ class _MyInquiriesScreenState extends State<MyInquiriesScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => InquiryDetailScreen(
+        builder: (context) => InquiryConversationsScreen(
           apiService: widget.apiService,
           inquiry: inquiry,
         ),
       ),
-    );
+    ).then((_) => _loadInquiries());
   }
 
   @override
