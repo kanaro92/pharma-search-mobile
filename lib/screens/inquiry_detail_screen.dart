@@ -156,21 +156,45 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Medication: ${widget.inquiry.medicationName}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF6B8EB3),
-                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.medical_services_outlined,
+                        color: Color(0xFF6B8EB3),
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          widget.inquiry.medicationName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF6B8EB3),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    'Note: ${widget.inquiry.patientNote}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[700],
-                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.notes_outlined,
+                        color: Colors.grey[600],
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          widget.inquiry.patientNote,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -185,7 +209,7 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'Status: ${widget.inquiry.status}',
+                      widget.inquiry.status,
                       style: TextStyle(
                         color: widget.inquiry.status == 'PENDING'
                             ? Colors.orange
@@ -197,6 +221,49 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
                 ],
               ),
             ),
+            // Responding Pharmacies Section
+            if (widget.inquiry.respondingPharmacies != null &&
+                widget.inquiry.respondingPharmacies!.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Responding Pharmacies',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF6B8EB3),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: widget.inquiry.respondingPharmacies!
+                          .map((pharmacy) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  pharmacy.name,
+                                  style: TextStyle(
+                                    color: Colors.grey[800],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                  ],
+                ),
+              ),
             // Messages List
             Expanded(
               child: _isLoading && _messages.isEmpty
@@ -258,14 +325,29 @@ class _InquiryDetailScreenState extends State<InquiryDetailScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                Text(
-                                  '${message.getSenderName()} • ${DateFormatter.formatDateTime(message.createdAt)}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isCurrentUser
-                                        ? Colors.white.withOpacity(0.8)
-                                        : Colors.grey[600],
-                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      message.getSenderName(),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: isCurrentUser
+                                            ? Colors.white.withOpacity(0.9)
+                                            : Colors.grey[800],
+                                      ),
+                                    ),
+                                    Text(
+                                      ' • ${DateFormatter.formatDateTime(message.createdAt)}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isCurrentUser
+                                            ? Colors.white.withOpacity(0.7)
+                                            : Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
