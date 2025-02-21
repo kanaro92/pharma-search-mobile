@@ -33,7 +33,7 @@ class _InquiryResponseScreenState extends State<InquiryResponseScreen> {
     });
 
     try {
-      await widget.apiService.respondToInquiry(
+      await widget.apiService.sendInquiryResponse(
         widget.inquiry.id,
         _responseController.text,
       );

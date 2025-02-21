@@ -140,6 +140,26 @@ class _PharmacistInquiriesScreenState extends State<PharmacistInquiriesScreen> {
                                     AppLocalizations.formatTimeAgo(inquiry.createdAt),
                                     style: theme.textTheme.bodySmall,
                                   ),
+                                  if (inquiry.respondingPharmacies?.isNotEmpty ?? false) ...[
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 4,
+                                      runSpacing: 4,
+                                      children: [
+                                        Icon(
+                                          Icons.people_outline_rounded,
+                                          size: 14,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                        Text(
+                                          '${inquiry.respondingPharmacies!.length} ${AppLocalizations.get('pharmaciesResponding')}',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ],
                               ),
                               trailing: Container(

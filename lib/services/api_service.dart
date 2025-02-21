@@ -525,12 +525,58 @@ class ApiService {
   Future<List<MedicationInquiry>> getPharmacistInquiries() async {
     await _initializeAuth();
     try {
-      final response = await _dio.get('$baseUrl/pharmacist/inquiries');
-      return (response.data as List)
-          .map((json) => MedicationInquiry.fromJson(json))
-          .toList();
+      final response = await _dio.get('/pharmacist/inquiries');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data as List<dynamic>;
+        return data.map((json) => MedicationInquiry.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to fetch pharmacist inquiries');
+      }
     } catch (e) {
-      print('Error getting pharmacist inquiries: $e');
+      print('Error fetching pharmacist inquiries: $e');
+      rethrow;
+    }
+  }
+
+  Future<MedicationInquiry> respondToInquiry(int inquiryId) async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.post('/medication-inquiries/$inquiryId/respond');
+      if (response.statusCode == 200) {
+        return MedicationInquiry.fromJson(response.data);
+      } else {
+        throw Exception('Failed to respond to inquiry');
+      }
+    } catch (e) {
+      print('Error responding to inquiry: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> sendInquiryResponse(int inquiryId, String response) async {
+    await _initializeAuth();
+    try {
+      final body = {
+        'content': response,
+      };
+      await _dio.post('/medication-inquiries/$inquiryId/messages', data: body);
+    } catch (e) {
+      print('Error sending inquiry response: $e');
+      rethrow;
+    }
+  }
+
+  Future<MedicationInquiry> withdrawFromInquiry(int inquiryId) async {
+    await _initializeAuth();
+    try {
+      final response = await _dio.post('/medication-inquiries/$inquiryId/withdraw');
+      if (response.statusCode == 200) {
+        return MedicationInquiry.fromJson(response.data);
+      } else {
+        throw Exception('Failed to withdraw from inquiry');
+      }
+    } catch (e) {
+      print('Error withdrawing from inquiry: $e');
       rethrow;
     }
   }
@@ -568,29 +614,6 @@ class ApiService {
     } catch (e) {
       print('Error getting pharmacy statistics: $e');
       rethrow;
-    }
-  }
-
-  Future<void> respondToInquiry(int inquiryId, String response) async {
-    await _initializeAuth();
-    try {
-      final body = {
-        'content': response,
-      };
-
-      final apiResponse = await _dio.post(
-        '/medication-inquiries/$inquiryId/messages',
-        data: body,
-      );
-
-      if (apiResponse.statusCode != 200) {
-        throw Exception('Failed to send response');
-      }
-
-      // Close the inquiry after sending the response
-      await _dio.post('/medication-inquiries/$inquiryId/close');
-    } catch (e) {
-      throw Exception('Error responding to inquiry: $e');
     }
   }
 

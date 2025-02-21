@@ -27,19 +27,24 @@ class _PharmacistInquiryDetailScreenState extends State<PharmacistInquiryDetailS
   bool _isLoading = false;
   String? _currentUserEmail;
   bool _isSending = false;
+  bool _isRespondingPharmacy = false;
 
   @override
   void initState() {
     super.initState();
     _loadMessages();
     _loadCurrentUser();
+    _checkRespondingStatus();
   }
 
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
+  Future<void> _checkRespondingStatus() async {
+    if (widget.inquiry.respondingPharmacies != null) {
+      final currentUser = await UserService().getCurrentUser();
+      setState(() {
+        _isRespondingPharmacy = widget.inquiry.respondingPharmacies!
+            .any((pharmacy) => pharmacy.id == currentUser?['id']);
+      });
+    }
   }
 
   Future<void> _loadCurrentUser() async {
@@ -90,7 +95,7 @@ class _PharmacistInquiryDetailScreenState extends State<PharmacistInquiryDetailS
     });
 
     try {
-      await widget.apiService.sendInquiryMessage(widget.inquiry.id, message);
+      await widget.apiService.sendInquiryResponse(widget.inquiry.id, message);
       _messageController.clear();
       await _loadMessages();
     } catch (e) {
@@ -112,7 +117,7 @@ class _PharmacistInquiryDetailScreenState extends State<PharmacistInquiryDetailS
     });
 
     try {
-      await widget.apiService.respondToInquiry(
+      await widget.apiService.sendInquiryResponse(
         widget.inquiry.id,
         _messageController.text.trim(),
       );
@@ -148,6 +153,81 @@ class _PharmacistInquiryDetailScreenState extends State<PharmacistInquiryDetailS
     }
   }
 
+  Future<void> _respondToInquiry() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await widget.apiService.respondToInquiry(widget.inquiry.id);
+      setState(() {
+        _isRespondingPharmacy = true;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.get('inquiryResponseSuccess')),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.get('inquiryResponseError')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _withdrawFromInquiry() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await widget.apiService.withdrawFromInquiry(widget.inquiry.id);
+      setState(() {
+        _isRespondingPharmacy = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.get('inquiryWithdrawSuccess')),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.get('inquiryWithdrawError')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -158,6 +238,20 @@ class _PharmacistInquiryDetailScreenState extends State<PharmacistInquiryDetailS
           AppLocalizations.get('inquiryDetails'),
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
+        actions: [
+          if (!_isRespondingPharmacy && widget.inquiry.status != 'CLOSED')
+            IconButton(
+              icon: const Icon(Icons.add_task_rounded),
+              tooltip: AppLocalizations.get('respondToInquiry'),
+              onPressed: _respondToInquiry,
+            ),
+          if (_isRespondingPharmacy && widget.inquiry.status != 'CLOSED')
+            IconButton(
+              icon: const Icon(Icons.remove_circle_outline_rounded),
+              tooltip: AppLocalizations.get('withdrawFromInquiry'),
+              onPressed: _withdrawFromInquiry,
+            ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -276,6 +370,44 @@ class _PharmacistInquiryDetailScreenState extends State<PharmacistInquiryDetailS
                             ),
                           ],
                         ),
+                      ),
+                    ),
+                  if (widget.inquiry.respondingPharmacies?.isNotEmpty ?? false)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppLocalizations.get('respondingPharmacies'),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: widget.inquiry.respondingPharmacies!.map((pharmacy) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surfaceVariant,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  pharmacy.name,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
                       ),
                     ),
                 ],

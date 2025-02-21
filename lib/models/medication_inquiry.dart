@@ -8,6 +8,7 @@ class MedicationInquiry {
   final DateTime createdAt;
   final Map<String, dynamic>? user;
   final List<Message>? messages;
+  final List<User>? respondingPharmacies;
 
   MedicationInquiry({
     required this.id,
@@ -17,6 +18,7 @@ class MedicationInquiry {
     required this.createdAt,
     this.user,
     this.messages,
+    this.respondingPharmacies,
   });
 
   int? get userId => user?['id'] as int?;
@@ -30,6 +32,13 @@ class MedicationInquiry {
             .toList();
       }
 
+      List<User>? pharmaciesList;
+      if (json['respondingPharmacies'] != null) {
+        pharmaciesList = (json['respondingPharmacies'] as List<dynamic>)
+            .map((pharmacy) => User.fromJson(pharmacy as Map<String, dynamic>))
+            .toList();
+      }
+
       return MedicationInquiry(
         id: json['id'] as int,
         medicationName: json['medicationName'] as String,
@@ -38,6 +47,7 @@ class MedicationInquiry {
         createdAt: DateTime.parse(json['createdAt'] as String),
         user: json['user'] as Map<String, dynamic>?,
         messages: messagesList,
+        respondingPharmacies: pharmaciesList,
       );
     } catch (e) {
       print('Error parsing MedicationInquiry: $e');
@@ -55,6 +65,7 @@ class MedicationInquiry {
       'createdAt': createdAt.toIso8601String(),
       'user': user,
       'messages': messages?.map((message) => message.toJson()).toList(),
+      'respondingPharmacies': respondingPharmacies?.map((pharmacy) => pharmacy.toJson()).toList(),
     };
   }
 }
